@@ -1,3 +1,8 @@
+naver:
+  api:
+    clientId: N97AIPxC798NeqYQQBDv
+    clientSecret: cXcIIQ78M8
+
 spring:
   datasource:
     url: jdbc:postgresql://221.168.33.92:5433/hubble
