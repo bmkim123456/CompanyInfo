@@ -1,7 +1,6 @@
+/*
 package com.article.service;
 
-import com.article.entity.NaverNewsItem;
-import com.article.etc.NaverNewsResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -52,3 +51,4 @@ public class NaverNewsService {
         return Collections.emptyList();
     }
 }
+*/

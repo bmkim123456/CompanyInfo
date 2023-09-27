@@ -1,14 +1,14 @@
 package com.article.service;
 
 import com.article.entity.CompanyInfo;
-import com.article.entity.NaverNewsItem;
 import com.article.repository.CompanyInfoRepository;
+import org.json.JSONObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -17,15 +17,55 @@ public class ArticleService {
 
 
     private final CompanyInfoRepository companyInfoRepository;
+    private final RestTemplate restTemplate;
 
-    private final NaverNewsService naverNewsService;
-
-    public ArticleService(CompanyInfoRepository companyInfoRepository, NaverNewsService naverNewsService) {
+    public ArticleService(CompanyInfoRepository companyInfoRepository, RestTemplate restTemplate) {
         this.companyInfoRepository = companyInfoRepository;
-        this.naverNewsService = naverNewsService;
+        this.restTemplate = restTemplate;
     }
 
-    public List<NaverNewsItem> processUsersSequentially(int display) {
+    // 회사 정보를 가져오는 로직
+    public String processUsersSequentially() {
+        Page<CompanyInfo> companyPage = companyInfoRepository.findAll(PageRequest.of(0,5));
+        List<CompanyInfo> companyInfos = companyPage.getContent();
+        StringBuilder resultBuilder = new StringBuilder();
+
+        for (CompanyInfo companyInfo : companyInfos) {
+            try {
+                TimeUnit.SECONDS.sleep(10);
+
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("idSeq", companyInfo.getId_seq());
+                jsonObject.put("companyName", companyInfo.getCompanyName());
+                jsonObject.put("ceoName", companyInfo.getCeoName());
+                String jsonResult = jsonObject.toString();
+                System.out.println("Sending JSON: " + jsonResult);
+
+                String postUrl = "http://localhost:8086/api/article/search";
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                HttpEntity<String> requestEntity = new HttpEntity<>(jsonResult, headers);
+
+                ResponseEntity<String> responseEntity = restTemplate.exchange(
+                        postUrl,
+                        HttpMethod.POST,
+                        requestEntity,
+                        String.class
+                );
+
+                resultBuilder.append(jsonResult).append("\n");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return "Error";
+            }
+        }
+
+        return resultBuilder.toString();
+    }
+
+    // 뉴스검색
+    /*public List<NaverNewsItem> processUsersSequentially(int display) {
         Page<CompanyInfo> companyPage = companyInfoRepository.findAll(PageRequest.of(0, 10));
         List<CompanyInfo> companyInfos = companyPage.getContent();
         List<NaverNewsItem> naverNewsItems = new ArrayList<>();
@@ -48,29 +88,6 @@ public class ArticleService {
         }
 
         return naverNewsItems;
-    }
-
-
-
-    // 회사 정보를 가져오는 로직
-    /*public String processUsersSequentially() {
-        Page<CompanyInfo> companyPage = companyInfoRepository.findAll(PageRequest.of(0,10));
-        List<CompanyInfo> companyInfos = companyPage.getContent();
-        StringBuilder resultBuilder = new StringBuilder();
-
-        for (CompanyInfo companyInfo : companyInfos) {
-            try {
-                TimeUnit.SECONDS.sleep(2);
-                String jsonResult = "{\"id\":" + companyInfo.getId_seq() + ",\"회사명\":\"" + companyInfo.getCompanyName() + ",\"대표자\":\"" + companyInfo.getCeoName() + "\"}";
-                System.out.println("Sending JSON: " + jsonResult);
-                resultBuilder.append(jsonResult).append("\n");
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return "Error";
-            }
-        }
-
-        return resultBuilder.toString();
     }*/
 
 

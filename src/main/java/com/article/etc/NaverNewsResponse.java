@@ -1,3 +1,4 @@
+/*
 package com.article.etc;
 
 import com.article.entity.NaverNewsItem;
@@ -9,3 +10,4 @@ import java.util.List;
 public class NaverNewsResponse {
     private List<NaverNewsItem> items;
 }
+*/

@@ -1,3 +1,4 @@
+/*
 package com.article.entity;
 
 import lombok.AllArgsConstructor;
@@ -28,3 +29,4 @@ public class NaverNewsItem {
     private String url;
 
 }
+*/
