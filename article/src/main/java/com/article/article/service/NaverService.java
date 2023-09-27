@@ -1,6 +1,7 @@
 package com.article.article.service;
 
 import com.article.article.dto.CompanySearchParam;
+import com.article.article.dto.NaverArticle;
 import com.article.article.entity.Naver;
 import com.article.article.repository.NaverRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,7 +40,8 @@ public class NaverService {
         final int idSeq = companySearchParam.getId_seq();
         final LocalDateTime minDate = companySearchParam.getArticleUpdateDatetime();
 
-        final List<String> keywords = new ArrayList<>();
-        keywords.add(String.format("%s %s", companySearchParam.getCompanyName(), companySearchParam.getCeoName()));
+        String keyword = companySearchParam.getCompanyName() + " " + companySearchParam.getCeoName();
+
+        
     }
 }
