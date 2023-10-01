@@ -1,2 +1,18 @@
-spring:
+server:
   port: 8085
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://192.168.0.58:5432/test
+    platform: postgres
+    username: postgres
+    password: "!@Q2E41w3r@!"
+
+    jpa:
+      hibernate:
+        ddl-auto: update
+      show-sql: true
+      database: postgresql
+      database-platform: org.hibernate.dialect.PostgreSQLDialect
+

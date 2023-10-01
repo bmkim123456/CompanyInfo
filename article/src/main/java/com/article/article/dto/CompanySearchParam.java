@@ -18,10 +18,8 @@ public class CompanySearchParam {
     @Id
     private int id_seq;
 
-    @Column(name = "\"companyName\"")
     private String companyName;
 
-    @Column(name = "\"ceoName\"")
     private String ceoName;
 
     private LocalDateTime articleUpdateDatetime;
