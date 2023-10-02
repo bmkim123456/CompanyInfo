@@ -14,8 +14,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Locale;
@@ -74,21 +72,25 @@ public class NaverArticleService {
 
                         String title = itemNode.get("title").asText();
                         String originalLink = itemNode.get("originallink").asText();
-                        String link = itemNode.get("link").asText();
-                        String description = itemNode.get("description").asText();
-                        String pubDateStr = itemNode.get("pubDate").asText();
 
-                        // pubDate 값을 LocalDateTime으로 변환
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.US);
-                        LocalDateTime pubDate = LocalDateTime.parse(pubDateStr, formatter);
+                        // 뉴스 중복여부 확인 (제목, 원본링크)
+                        if (!isDuplicateNews(title, originalLink)) {
+                            String link = itemNode.get("link").asText();
+                            String description = itemNode.get("description").asText();
+                            String pubDateStr = itemNode.get("pubDate").asText();
 
-                        // 엔터티 객체 생성 및 데이터 설정
-                        Naver news = createNaverEntity(searchParam.getId_seq(), title, originalLink, link, description, pubDate);
+                            // pubDate 값을 LocalDateTime으로 변환
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.US);
+                            LocalDateTime pubDate = LocalDateTime.parse(pubDateStr, formatter);
 
-                        // 엔터티를 DB에 저장
-                        naverRepository.save(news);
+                            // 엔터티 객체 생성 및 데이터 설정
+                            Naver news = createNaverEntity(searchParam.getId_seq(), title, originalLink, link, description, pubDate);
 
-                        maxNewsToSave--;
+                            // 엔터티를 DB에 저장
+                            naverRepository.save(news);
+
+                            maxNewsToSave--;
+                        }
                     }
                 }
             }
@@ -125,5 +127,10 @@ public class NaverArticleService {
         news.setPrev_content(description);
         news.setUpdate_datetime(pubDate);
         return news;
+    }
+
+    // 중복 뉴스 여부를 검사
+    private boolean isDuplicateNews(String title, String originLink) {
+        return naverRepository.existsByTitleOrOriginLink(title, originLink);
     }
 }
