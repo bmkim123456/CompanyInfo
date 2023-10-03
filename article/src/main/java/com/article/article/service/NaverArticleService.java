@@ -71,10 +71,10 @@ public class NaverArticleService {
                         }
 
                         String title = itemNode.get("title").asText();
-                        String originalLink = itemNode.get("originallink").asText();
+                        String originLink = itemNode.get("originallink").asText();
 
                         // 뉴스 중복여부 확인 (제목, 원본링크)
-                        if (!isDuplicateNews(title, originalLink)) {
+                        if (!isDuplicateNews(title, originLink)) {
                             String link = itemNode.get("link").asText();
                             String description = itemNode.get("description").asText();
                             String pubDateStr = itemNode.get("pubDate").asText();
@@ -84,7 +84,7 @@ public class NaverArticleService {
                             LocalDateTime pubDate = LocalDateTime.parse(pubDateStr, formatter);
 
                             // 엔터티 객체 생성 및 데이터 설정
-                            Naver news = createNaverEntity(searchParam.getId_seq(), title, originalLink, link, description, pubDate);
+                            Naver news = createNaverEntity(searchParam.getId_seq(), title, originLink, link, description, pubDate);
 
                             // 엔터티를 DB에 저장
                             naverRepository.save(news);
@@ -122,7 +122,7 @@ public class NaverArticleService {
         Naver news = new Naver();
         news.setId_seq(id_seq);
         news.setTitle(title);
-        news.setOrigin_link(originalLink);
+        news.setOriginLink(originalLink);
         news.setLink(link);
         news.setPrev_content(description);
         news.setUpdate_datetime(pubDate);

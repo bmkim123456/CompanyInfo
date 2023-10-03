@@ -13,37 +13,39 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "naver_article", schema = "public")
 public class Naver {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "article_seq")
     private Long article_seq;
 
-    @Column
+    @Column(name = "create_datetime")
     private LocalDateTime create_datetime;
 
-    @Column
+    @Column(name = "update_datetime")
     private LocalDateTime update_datetime;
 
-    @Column
+    @Column(name = "id_seq")
     private int id_seq;
 
-    @Column
+    @Column(name = "Source")
     private String Source;
 
-    @Column
+    @Column(name = "news_id")
     private String news_id;
 
-    @Column
-    private String origin_link;
+    @Column(name = "originLink")
+    private String originLink;
 
-    @Column
+    @Column(name = "link")
     private String link;
 
-    @Column
+    @Column(name = "title")
     private String title;
 
-    @Column
+    @Column(name = "prev_content")
     private String prev_content;
 
 
