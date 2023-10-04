@@ -3,9 +3,16 @@ spring:
     url: jdbc:postgresql://221.168.33.92:5433/hubble
     username: hubble
     password: "!Hubble1026!"
+
   jpa:
     hibernate:
       naming:
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
       ddl-auto: update
+
+  rabbitmq:
+    host: 192.168.0.58
+    port: 5672
+    username: admin
+    password: "@1026Antock@"

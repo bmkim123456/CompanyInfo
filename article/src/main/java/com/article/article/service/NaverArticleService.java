@@ -1,10 +1,12 @@
 package com.article.article.service;
 
+import com.article.article.component.SearchResultsProducer;
 import com.article.article.dto.CompanySearchParam;
 import com.article.article.entity.Naver;
 import com.article.article.repository.NaverRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,14 +33,16 @@ public class NaverArticleService {
     @Value("${naver.api.clientSecret}")
     private String clientSecret;
 
-    private final NaverRepository naverRepository;
-    private final RestTemplate restTemplate;
-
     private static final Logger log = LoggerFactory.getLogger(NaverArticleService.class);
 
-    public NaverArticleService(NaverRepository naverRepository, RestTemplate restTemplate) {
+    private final NaverRepository naverRepository;
+    private final RestTemplate restTemplate;
+    private final SearchResultsProducer searchResultsProducer;
+
+    public NaverArticleService(NaverRepository naverRepository, RestTemplate restTemplate, SearchResultsProducer searchResultsProducer) {
         this.naverRepository = naverRepository;
         this.restTemplate = restTemplate;
+        this.searchResultsProducer = searchResultsProducer;
     }
 
     AtomicLong KEY_COUNT = new AtomicLong(1);
@@ -71,6 +75,7 @@ public class NaverArticleService {
                 );
 
                 ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.registerModule(new JavaTimeModule());
                 JsonNode rootNode = objectMapper.readTree(responseEntity.getBody());
                 JsonNode itemsNode = rootNode.get("items");
 
@@ -93,17 +98,18 @@ public class NaverArticleService {
                                 String link = itemNode.get("link").asText();
                                 String description = itemNode.get("description").asText();
                                 String source = "NAVER";
-                                // 엔터티 객체 생성 및 데이터 설정
-                                Naver news = createNaverEntity(searchParam.getId_seq(), source,LocalDateTime.now(), title, originLink, link, description, pubDate);
+                                LocalDateTime createDatetime = LocalDateTime.now();
+                                Naver news = createNaverEntity(searchParam.getId_seq(), source, createDatetime, title, originLink, link, description, pubDate);
 
-                                // 엔터티를 DB에 저장
-                                naverRepository.save(news);
+                                // Naver entity에 수집된 정보를 rabbitmq로 전달
+                                String searchResultJson = objectMapper.writeValueAsString(news);
+                                searchResultsProducer.sendSearchResults(searchResultJson);
                             }
                         }
                     }
-                } log.info(responseEntity.getBody());
+                }
             } else log.info("사업 활동 중이 아닌 기업 입니다.");
-            return "저장 완료";
+            return "rabbitmq 전달 완료";
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException("검색어 인코딩 실패", e);
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
@@ -117,17 +123,8 @@ public class NaverArticleService {
         return URLEncoder.encode(keyword, "UTF-8");
     }
 
-    // 요청 헤더 설정
-    private HttpHeaders createRequestHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        headers.set("X-Naver-Client-Id", clientId);
-        headers.set("X-Naver-Client-Secret", clientSecret);
-        return headers;
-    }
-
-    // 뉴스 저장
-    private Naver createNaverEntity(int id_seq, String source,LocalDateTime createDataTime,String title, String originalLink, String link, String description, LocalDateTime pubDate) {
+    // 뉴스 rabbitmq로 전달
+    private Naver createNaverEntity(int id_seq, String source, LocalDateTime createDataTime,String title, String originalLink, String link, String description, LocalDateTime pubDate) {
         Naver news = new Naver();
         news.setId_seq(id_seq);
         news.setSource(source);
@@ -149,5 +146,16 @@ public class NaverArticleService {
     private boolean isRecentNews (LocalDateTime pubDate) {
         LocalDateTime yearsAgo = LocalDateTime.now().minusYears(3);
         return pubDate.isAfter(yearsAgo);
+    }
+
+    // 네이버 api 키 전달
+    private HttpHeaders createRequestHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        if (KEY_COUNT.intValue() <= 25000) {
+            headers.set("X-Naver-Client-Id", clientId);
+            headers.set("X-Naver-Client-Secret", clientSecret);
+        }
+        return headers;
     }
 }

@@ -20,7 +20,7 @@ public class ArticleController {
     }
 
     @PostMapping("/search")
-    public ResponseEntity<String> searchBlog(@RequestBody CompanySearchParam searchParam) {
+    public ResponseEntity<String> searchArticle(@RequestBody CompanySearchParam searchParam) {
         String result = naverArticleService.searchArticle(searchParam);
         return ResponseEntity.ok(result);
     }

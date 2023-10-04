@@ -27,3 +27,6 @@ naver:
     clientId: "N97AIPxC798NeqYQQBDv"
     clientSecret: "cXcIIQ78M8"
 
+rabbitmq:
+  queueName: naver-search-results
+

@@ -3,6 +3,8 @@ package com.article.service;
 import com.article.entity.CompanyInfo;
 import com.article.repository.CompanyInfoRepository;
 import org.json.JSONObject;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -20,14 +22,17 @@ public class CompanySearchService {
     private final CompanyInfoRepository companyInfoRepository;
     private final RestTemplate restTemplate;
 
-    public CompanySearchService(CompanyInfoRepository companyInfoRepository, RestTemplate restTemplate) {
+    private final RabbitTemplate rabbitTemplate;
+
+    public CompanySearchService(CompanyInfoRepository companyInfoRepository, RestTemplate restTemplate, RabbitTemplate rabbitTemplate) {
         this.companyInfoRepository = companyInfoRepository;
         this.restTemplate = restTemplate;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     // 회사 정보를 가져오는 로직
     public String processUsersSequentially() {
-        Page<CompanyInfo> companyPage = companyInfoRepository.findAll(PageRequest.of(0, 20, Sort.by(Sort.Order.asc("idSeq"))));
+        Page<CompanyInfo> companyPage = companyInfoRepository.findAll(PageRequest.of(0, 200, Sort.by(Sort.Order.asc("idSeq"))));
 
         List<CompanyInfo> companyInfos = companyPage.getContent();
         StringBuilder resultBuilder = new StringBuilder();
@@ -50,7 +55,11 @@ public class CompanySearchService {
                 String jsonResult = jsonObject.toString();
                 System.out.println("Sending JSON: " + jsonResult);
 
-                String postUrl = "http://localhost:8085/api/article/search";
+                // 큐로 기업정보 전달
+                rabbitTemplate.convertAndSend("company-info", jsonResult);
+
+                // api로 기업정보 전달
+                /*String postUrl = "http://localhost:8085/api/article/search";
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
@@ -61,11 +70,11 @@ public class CompanySearchService {
                         HttpMethod.POST,
                         requestEntity,
                         String.class
-                );
+                );*/
 
                 resultBuilder.append(jsonResult).append("\n");
 
-                TimeUnit.SECONDS.sleep(3);
+                TimeUnit.MILLISECONDS.sleep(100);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return "Error";
