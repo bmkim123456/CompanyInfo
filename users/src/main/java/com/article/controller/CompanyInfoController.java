@@ -1,22 +1,19 @@
 package com.article.controller;
 
 
-import com.article.service.ArticleService;
+import com.article.service.CompanySearchService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Collections;
-import java.util.List;
-
 @RestController
 @RequestMapping("/api")
-public class ArticleController {
+public class CompanyInfoController {
 
-    private final ArticleService testService;
+    private final CompanySearchService testService;
 
-    public ArticleController(ArticleService testService) {
+    public CompanyInfoController(CompanySearchService testService) {
         this.testService = testService;
     }
 

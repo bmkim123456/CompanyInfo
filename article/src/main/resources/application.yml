@@ -16,6 +16,12 @@ spring:
       database: postgresql
       database-platform: org.hibernate.dialect.PostgreSQLDialect
 
+  rabbitmq:
+    host: 192.168.0.58
+    port: 5672
+    username: admin
+    password: "@1026Antock@"
+
 naver:
   api:
     clientId: "N97AIPxC798NeqYQQBDv"

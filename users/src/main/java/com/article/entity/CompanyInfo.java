@@ -1,20 +1,29 @@
 package com.article.entity;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 
 @Entity
 @Getter
-@Table(name = "ceo_name_asis", schema = "asis")
+@Setter
+@Table(name = "unv_company", schema = "public")
 public class CompanyInfo {
 
     @Id
-    private Long id_seq;
+    @Column(name = "id_seq")
+    private Long idSeq;
 
-    @Column(name = "\"companyName\"")
+    @Column(name = "company_name")
     private String companyName;
 
-    @Column(name = "\"ceoName\"")
+    @Column(name = "ceo_name")
     private String ceoName;
+
+    @Column(name = "corporate_status")
+    private String corporateStatus;
+
+    @Column(name = "termination")
+    private String termination;
 }

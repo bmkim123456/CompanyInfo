@@ -5,6 +5,8 @@ import com.article.article.entity.Naver;
 import com.article.article.repository.NaverRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 @Service
@@ -31,22 +34,31 @@ public class NaverArticleService {
     private final NaverRepository naverRepository;
     private final RestTemplate restTemplate;
 
+    private static final Logger log = LoggerFactory.getLogger(NaverArticleService.class);
+
     public NaverArticleService(NaverRepository naverRepository, RestTemplate restTemplate) {
         this.naverRepository = naverRepository;
         this.restTemplate = restTemplate;
     }
 
+    AtomicLong KEY_COUNT = new AtomicLong(1);
     public String searchArticle(CompanySearchParam searchParam) {
         try {
-            // 검색에 사용할 키워드 조합
             if (searchParam.getCompanyName().isEmpty() || searchParam.getCeoName().isEmpty()) {
                 throw new RuntimeException("회사명 또는 대표자명을 알 수 없습니다.");
-            } else {
+            } else if (searchParam.getTermination().equals("CLOSED")) {
+                log.info("수집을 진행하지 않습니다. 이유 : CLOSED");
+            } else if (searchParam.getCorporateStatus().equals("살아있는 등기") || searchParam.getCorporateStatus().equals("회생절차")
+                    || searchParam.getCorporateStatus().equals("보전관리")) {
 
                 String encodedKeyword = encodeKeyword(searchParam.getCompanyName(), searchParam.getCeoName());
 
+                log.info(searchParam.getCompanyName() + " " + searchParam.getCeoName());
+
                 // 네이버 뉴스 검색 API 호출 URL 생성
-                String apiUrl = "https://openapi.naver.com/v1/search/news?query=" + encodedKeyword;
+                String apiUrl = "https://openapi.naver.com/v1/search/news.json?query=" + encodedKeyword + "&display=100";
+                log.info("키 사용 횟수 : {}", KEY_COUNT.get());
+                KEY_COUNT.incrementAndGet();
 
                 HttpHeaders headers = createRequestHeaders();
 
@@ -63,38 +75,35 @@ public class NaverArticleService {
                 JsonNode itemsNode = rootNode.get("items");
 
                 if (itemsNode != null && itemsNode.isArray()) {
-                    int maxNewsToSave = 100;
 
                     for (JsonNode itemNode : itemsNode) {
-                        if (maxNewsToSave <= 0) {
-                            break;
-                        }
 
                         String title = itemNode.get("title").asText();
                         String originLink = itemNode.get("originallink").asText();
+                        String pubDateStr = itemNode.get("pubDate").asText();
 
-                        // 뉴스 중복여부 확인 (제목, 원본링크)
-                        if (!isDuplicateNews(title, originLink)) {
-                            String link = itemNode.get("link").asText();
-                            String description = itemNode.get("description").asText();
-                            String pubDateStr = itemNode.get("pubDate").asText();
+                        // pubDate 값을 LocalDateTime으로 변환
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.US);
+                        LocalDateTime pubDate = LocalDateTime.parse(pubDateStr, formatter);
 
-                            // pubDate 값을 LocalDateTime으로 변환
-                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.US);
-                            LocalDateTime pubDate = LocalDateTime.parse(pubDateStr, formatter);
+                        // 최근 n년 이내의 뉴스인지 확인
+                        if (isRecentNews(pubDate)) {
+                            // 뉴스 중복여부 확인 (제목, 원본링크)
+                            if (!isDuplicateNews(title, originLink)) {
+                                String link = itemNode.get("link").asText();
+                                String description = itemNode.get("description").asText();
+                                String source = "NAVER";
+                                // 엔터티 객체 생성 및 데이터 설정
+                                Naver news = createNaverEntity(searchParam.getId_seq(), source,LocalDateTime.now(), title, originLink, link, description, pubDate);
 
-                            // 엔터티 객체 생성 및 데이터 설정
-                            Naver news = createNaverEntity(searchParam.getId_seq(), title, originLink, link, description, pubDate);
-
-                            // 엔터티를 DB에 저장
-                            naverRepository.save(news);
-
-                            maxNewsToSave--;
+                                // 엔터티를 DB에 저장
+                                naverRepository.save(news);
+                            }
                         }
                     }
-                }
-            }
-            return "저장완료";
+                } log.info(responseEntity.getBody());
+            } else log.info("사업 활동 중이 아닌 기업 입니다.");
+            return "저장 완료";
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException("검색어 인코딩 실패", e);
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
@@ -118,9 +127,11 @@ public class NaverArticleService {
     }
 
     // 뉴스 저장
-    private Naver createNaverEntity(int id_seq, String title, String originalLink, String link, String description, LocalDateTime pubDate) {
+    private Naver createNaverEntity(int id_seq, String source,LocalDateTime createDataTime,String title, String originalLink, String link, String description, LocalDateTime pubDate) {
         Naver news = new Naver();
         news.setId_seq(id_seq);
+        news.setSource(source);
+        news.setCreate_datetime(createDataTime);
         news.setTitle(title);
         news.setOriginLink(originalLink);
         news.setLink(link);
@@ -132,5 +143,11 @@ public class NaverArticleService {
     // 중복 뉴스 여부를 검사
     private boolean isDuplicateNews(String title, String originLink) {
         return naverRepository.existsByTitleOrOriginLink(title, originLink);
+    }
+
+    // 뉴스가 최근 n년 이내의 것인지 검증
+    private boolean isRecentNews (LocalDateTime pubDate) {
+        LocalDateTime yearsAgo = LocalDateTime.now().minusYears(3);
+        return pubDate.isAfter(yearsAgo);
     }
 }
