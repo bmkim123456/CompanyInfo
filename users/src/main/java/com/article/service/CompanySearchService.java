@@ -32,7 +32,7 @@ public class CompanySearchService {
 
     // 회사 정보를 가져오는 로직
     public String processUsersSequentially() {
-        Page<CompanyInfo> companyPage = companyInfoRepository.findAll(PageRequest.of(0, 200, Sort.by(Sort.Order.asc("idSeq"))));
+        Page<CompanyInfo> companyPage = companyInfoRepository.findAll(PageRequest.of(0, 300, Sort.by(Sort.Order.asc("idSeq"))));
 
         List<CompanyInfo> companyInfos = companyPage.getContent();
         StringBuilder resultBuilder = new StringBuilder();
@@ -74,7 +74,7 @@ public class CompanySearchService {
 
                 resultBuilder.append(jsonResult).append("\n");
 
-                TimeUnit.MILLISECONDS.sleep(100);
+                TimeUnit.MILLISECONDS.sleep(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return "Error";
