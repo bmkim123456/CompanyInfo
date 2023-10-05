@@ -1,9 +1,11 @@
 package com.article.article.service;
 
 import com.article.article.component.SearchResultsProducer;
+import com.article.article.dto.BigkindsRequestParam;
 import com.article.article.dto.CompanySearchParam;
 import com.article.article.entity.Naver;
 import com.article.article.repository.NaverRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -16,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -49,7 +52,6 @@ public class NaverArticleService {
                     || searchParam.getCorporateStatus().equals("보전관리")) {
 
                 String encodedKeyword = encodeKeyword(searchParam.getCompanyName(), searchParam.getCeoName());
-
                 log.info(searchParam.getCompanyName() + " " + searchParam.getCeoName());
 
                 // 네이버 뉴스 검색 API 호출 URL 생성
@@ -110,6 +112,30 @@ public class NaverArticleService {
             throw new RuntimeException("검색 실패", e);
             }
     }
+
+    public String searchBigkindsArticle (CompanySearchParam searchParam, LocalDate startDate) throws JsonProcessingException {
+
+        BigkindsRequestParam requestParam = new BigkindsRequestParam(searchParam.getCompanyName() + " " + searchParam.getCeoName());
+        requestParam.setStartDate(startDate);
+
+        String apiKey = "661f02bd-536b-45de-adf2-e3a0764f0ffb";
+        String apiUrl = "http://tools.kinds.or.kr:8888/search/news";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("Authorization", apiKey);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String requestBody = objectMapper.writeValueAsString(requestParam);
+        HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity(apiUrl, requestEntity, String.class);
+
+        return responseEntity.getBody();
+
+    }
+
 
     // 회사명 + 대표자명 키워드 전달
     private String encodeKeyword(String companyName, String ceoName) throws UnsupportedEncodingException {
