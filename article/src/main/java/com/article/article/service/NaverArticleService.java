@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -18,20 +17,14 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
-import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
 
 
 @Service
 public class NaverArticleService {
-
-    @Value("${naver.api.clientId}")
-    private String clientId;
-
-    @Value("${naver.api.clientSecret}")
-    private String clientSecret;
 
     private static final Logger log = LoggerFactory.getLogger(NaverArticleService.class);
 
@@ -49,7 +42,7 @@ public class NaverArticleService {
     public String searchArticle(CompanySearchParam searchParam) {
         try {
             if (searchParam.getCompanyName().isEmpty() || searchParam.getCeoName().isEmpty()) {
-                throw new RuntimeException("회사명 또는 대표자명을 알 수 없습니다.");
+                log.info("회사명 또는 대표자명을 알 수 없습니다.");
             } else if (searchParam.getTermination().equals("CLOSED")) {
                 log.info("수집을 진행하지 않습니다. 이유 : CLOSED");
             } else if (searchParam.getCorporateStatus().equals("살아있는 등기") || searchParam.getCorporateStatus().equals("회생절차")
@@ -88,18 +81,19 @@ public class NaverArticleService {
                         String pubDateStr = itemNode.get("pubDate").asText();
 
                         // pubDate 값을 LocalDateTime으로 변환
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.US);
-                        LocalDateTime pubDate = LocalDateTime.parse(pubDateStr, formatter);
+                        LocalDateTime pubDate = ZonedDateTime.parse(pubDateStr, DateTimeFormatter.RFC_1123_DATE_TIME).toLocalDateTime();
 
                         // 최근 n년 이내의 뉴스인지 확인
                         if (isRecentNews(pubDate)) {
                             // 뉴스 중복여부 확인 (제목, 원본링크)
                             if (!isDuplicateNews(title, originLink)) {
+                                int idSeq = searchParam.getId_seq();
                                 String link = itemNode.get("link").asText();
                                 String description = itemNode.get("description").asText();
                                 String source = "NAVER";
                                 LocalDateTime createDatetime = LocalDateTime.now();
-                                Naver news = createNaverEntity(searchParam.getId_seq(), source, createDatetime, title, originLink, link, description, pubDate);
+                                LocalDateTime updateDatetime = LocalDateTime.now();
+                                Naver news = createNaverEntity(createDatetime, updateDatetime, idSeq, source, originLink, link, pubDate, title, description);
 
                                 // Naver entity에 수집된 정보를 rabbitmq로 전달
                                 String searchResultJson = objectMapper.writeValueAsString(news);
@@ -107,7 +101,7 @@ public class NaverArticleService {
                             }
                         }
                     }
-                }
+                } // log.info(responseEntity.getBody());
             } else log.info("사업 활동 중이 아닌 기업 입니다.");
             return "rabbitmq 전달 완료";
         } catch (UnsupportedEncodingException e) {
@@ -124,16 +118,18 @@ public class NaverArticleService {
     }
 
     // 뉴스 rabbitmq로 전달
-    private Naver createNaverEntity(int id_seq, String source, LocalDateTime createDataTime,String title, String originalLink, String link, String description, LocalDateTime pubDate) {
+    private Naver createNaverEntity(LocalDateTime createDataTime, LocalDateTime updateDatetime, int idSeq, String source, String originalLink, String link,
+                                    LocalDateTime pubDate, String title, String description) {
         Naver news = new Naver();
-        news.setId_seq(id_seq);
+        news.setCreateDatetime(createDataTime);
+        news.setUpdateDatetime(updateDatetime);
+        news.setIdSeq(idSeq);
         news.setSource(source);
-        news.setCreate_datetime(createDataTime);
-        news.setTitle(title);
         news.setOriginLink(originalLink);
         news.setLink(link);
-        news.setPrev_content(description);
-        news.setUpdate_datetime(pubDate);
+        news.setPublishDatetime(pubDate);
+        news.setTitle(title);
+        news.setPrevContent(description);
         return news;
     }
 
@@ -153,8 +149,8 @@ public class NaverArticleService {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         if (KEY_COUNT.intValue() <= 25000) {
-            headers.set("X-Naver-Client-Id", clientId);
-            headers.set("X-Naver-Client-Secret", clientSecret);
+            headers.set("X-Naver-Client-Id", "N97AIPxC798NeqYQQBDv");
+            headers.set("X-Naver-Client-Secret", "cXcIIQ78M8");
         }
         return headers;
     }

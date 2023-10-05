@@ -7,9 +7,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class SearchResultsProducer {
 
-    @Value("${rabbitmq.queueName}")
-    private String queueName;
-
     private final AmqpTemplate rabbitTemplate;
 
     public SearchResultsProducer(AmqpTemplate rabbitTemplate) {
@@ -17,6 +14,6 @@ public class SearchResultsProducer {
     }
 
     public void sendSearchResults(String searchResultJson) {
-        rabbitTemplate.convertAndSend(queueName, searchResultJson);
+        rabbitTemplate.convertAndSend("naver-search-results", searchResultJson);
     }
 }

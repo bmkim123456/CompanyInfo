@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -34,9 +33,8 @@ public class SearchResultsConsumer {
             CompanySearchParam searchParam = objectMapper.readValue(message, CompanySearchParam.class);
 
             String result = naverArticleService.searchArticle(searchParam);
-            log.info(result);
 
-            Thread.sleep(500);
+            Thread.sleep(100);
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
             throw new RuntimeException("전달 실패", e);
         } catch (InterruptedException e) {
@@ -44,12 +42,12 @@ public class SearchResultsConsumer {
         }
     }
 
-    @RabbitListener(queues = "${rabbitmq.queueName}", concurrency = "1")
+    @RabbitListener(queues = "naver-search-results", concurrency = "1")
     public void receiveSearchResults(String searchResultJson) {
         try {
             // JSON 형태의 검색 결과를 가져오기
             Naver naver = objectMapper.readValue(searchResultJson, Naver.class);
-
+            log.info(searchResultJson);
             // 가져온 JSON 데이터 저장
             Naver news = createNaverEntity(naver);
             naverRepository.save(news);
@@ -64,14 +62,15 @@ public class SearchResultsConsumer {
 
     private Naver createNaverEntity(Naver naver) {
         Naver news = new Naver();
-        news.setId_seq(naver.getId_seq());
+        news.setIdSeq(naver.getIdSeq());
         news.setSource(naver.getSource());
-        news.setCreate_datetime(naver.getCreate_datetime());
+        news.setCreateDatetime(naver.getCreateDatetime());
         news.setTitle(naver.getTitle());
         news.setOriginLink(naver.getOriginLink());
         news.setLink(naver.getLink());
-        news.setPrev_content(naver.getPrev_content());
-        news.setUpdate_datetime(naver.getUpdate_datetime());
+        news.setPrevContent(naver.getPrevContent());
+        news.setUpdateDatetime(naver.getUpdateDatetime());
+        news.setPublishDatetime(naver.getPublishDatetime());
         return news;
     }
 }
