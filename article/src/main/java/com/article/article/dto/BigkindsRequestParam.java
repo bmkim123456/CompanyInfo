@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// 빅카인즈 기사 요청
 @Getter
 public class BigkindsRequestParam {
 

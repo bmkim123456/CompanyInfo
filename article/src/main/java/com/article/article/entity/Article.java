@@ -8,6 +8,7 @@ import lombok.Setter;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
+// 뉴스 데이터 저장할 내용
 @Entity
 @Getter
 @Setter

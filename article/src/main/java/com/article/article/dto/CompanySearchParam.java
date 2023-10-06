@@ -10,6 +10,7 @@ import javax.persistence.Column;
 import javax.persistence.Id;
 import java.time.LocalDateTime;
 
+// 전달받을 기업 정보
 @Getter
 @Setter
 @AllArgsConstructor

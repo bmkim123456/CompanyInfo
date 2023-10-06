@@ -3,6 +3,7 @@ package com.article.article.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+// 빅카인즈 기사 응답
 @Data
 @Builder
 @Getter
@@ -16,6 +17,7 @@ public class BigkindsResponse {
 
     // getter 및 setter 생략
 
+    @Getter
     public static class ReturnObject {
         @JsonProperty("total_hits")
         private int totalHits;

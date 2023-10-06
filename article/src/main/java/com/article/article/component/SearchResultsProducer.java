@@ -13,6 +13,7 @@ public class SearchResultsProducer {
         this.rabbitTemplate = rabbitTemplate;
     }
 
+    // 큐로 저장할 뉴스 전달
     public void sendSearchResults(String searchResultJson) {
         rabbitTemplate.convertAndSend("article-result", searchResultJson);
     }

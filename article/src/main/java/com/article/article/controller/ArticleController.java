@@ -1,9 +1,9 @@
 package com.article.article.controller;
 
-import com.article.article.dto.BigkindsRequestParam;
 import com.article.article.dto.BigkindsResponse;
 import com.article.article.dto.CompanySearchParam;
-import com.article.article.service.ArticleService;
+import com.article.article.service.BigkindsArticleService;
+import com.article.article.service.NaverArticleService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,21 +15,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("api/article")
 public class ArticleController {
 
-    private final ArticleService articleService;
 
-    public ArticleController(ArticleService articleService) {
-        this.articleService = articleService;
+    private final NaverArticleService naverArticleService;
+    private final BigkindsArticleService bigkindsArticleService;
+
+    public ArticleController(NaverArticleService naverArticleService, BigkindsArticleService bigkindsArticleService) {
+        this.naverArticleService = naverArticleService;
+        this.bigkindsArticleService = bigkindsArticleService;
     }
 
-    @PostMapping("/search")
+    @PostMapping("/naver")
     public ResponseEntity<String> searchArticle(@RequestBody CompanySearchParam searchParam) {
-        String result = articleService.searchNaverArticle(searchParam);
+        String result = naverArticleService.searchNaverArticle(searchParam);
         return ResponseEntity.ok(result);
     }
 
     @PostMapping("/bigkinds")
     public ResponseEntity<BigkindsResponse> searchArticleBigkinds(@RequestBody CompanySearchParam searchParam) throws JsonProcessingException {
-        BigkindsResponse result = articleService.searchBigkindsArticle(searchParam);
+        BigkindsResponse result = bigkindsArticleService.searchBigkindsArticle(searchParam);
         return ResponseEntity.ok(result);
     }
 }
