@@ -11,17 +11,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api")
 public class CompanyInfoController {
 
-    private final CompanySearchService testService;
+    private final CompanySearchService searchService;
 
-    public CompanyInfoController(CompanySearchService testService) {
-        this.testService = testService;
+    public CompanyInfoController(CompanySearchService searchService) {
+        this.searchService = searchService;
     }
 
     // 회사 정보 조회
     @PostMapping("/search")
     public ResponseEntity<String> processUsers() {
 
-        String result = testService.processUsersSequentially();
+        String result = searchService.processUsersSequentially();
 
         return ResponseEntity.ok(result);
     }
