@@ -14,6 +14,6 @@ public class SearchResultsProducer {
     }
 
     public void sendSearchResults(String searchResultJson) {
-        rabbitTemplate.convertAndSend("naver-search-results", searchResultJson);
+        rabbitTemplate.convertAndSend("article-result", searchResultJson);
     }
 }

@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "naver_article", schema = "public")
-public class Naver {
+public class Article {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
