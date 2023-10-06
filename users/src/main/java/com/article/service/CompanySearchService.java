@@ -32,11 +32,12 @@ public class CompanySearchService {
 
     // 회사 정보를 가져오는 로직
     public String processUsersSequentially() {
-        //Page<CompanyInfo> companyPage = companyInfoRepository.findAll(PageRequest.of(0, 300, Sort.by(Sort.Order.asc("idSeq"))));
+        Page<CompanyInfo> companyPage = companyInfoRepository.findAll(PageRequest.of(0, 100, Sort.by(Sort.Order.asc("idSeq"))));
 
-        // List<CompanyInfo> companyInfos = companyPage.getContent();
-        Long idSeq = Integer.toUnsignedLong(336484);
-        List<CompanyInfo> companyInfos = companyInfoRepository.findByIdSeq(idSeq);
+        List<CompanyInfo> companyInfos = companyPage.getContent();
+
+        /*Long idSeq = Integer.toUnsignedLong(336484);
+        List<CompanyInfo> companyInfos = companyInfoRepository.findByIdSeq(idSeq);*/
         StringBuilder resultBuilder = new StringBuilder();
 
         for (CompanyInfo companyInfo : companyInfos) {
