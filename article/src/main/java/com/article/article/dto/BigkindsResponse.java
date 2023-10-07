@@ -15,17 +15,15 @@ public class BigkindsResponse {
     @JsonProperty("return_object")
     private ReturnObject returnObject;
 
-    // getter 및 setter 생략
-
     @Getter
     public static class ReturnObject {
+
         @JsonProperty("total_hits")
         private int totalHits;
         @JsonProperty("documents")
         @Getter
         private Document[] documents;
 
-        // getter 및 setter 생략
     }
 
     @Getter

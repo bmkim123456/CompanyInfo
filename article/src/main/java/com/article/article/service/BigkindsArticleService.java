@@ -5,6 +5,7 @@ import com.article.article.dto.BigkindsRequestParam;
 import com.article.article.dto.BigkindsResponse;
 import com.article.article.dto.CompanySearchParam;
 import com.article.article.entity.Article;
+import com.article.article.mapper.ArticleMapper;
 import com.article.article.repository.ArticleRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -15,10 +16,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Service
 public class BigkindsArticleService {
@@ -29,11 +26,13 @@ public class BigkindsArticleService {
     private static final Logger log = LoggerFactory.getLogger(BigkindsArticleService.class);
 
     private final ArticleRepository articleRepository;
+    private final ArticleMapper articleMapper;
     private final RestTemplate restTemplate;
     private final SearchResultsProducer searchResultsProducer;
 
-    public BigkindsArticleService(ArticleRepository articleRepository, RestTemplate restTemplate, SearchResultsProducer searchResultsProducer) {
+    public BigkindsArticleService(ArticleRepository articleRepository, ArticleMapper articleMapper, RestTemplate restTemplate, SearchResultsProducer searchResultsProducer) {
         this.articleRepository = articleRepository;
+        this.articleMapper = articleMapper;
         this.restTemplate = restTemplate;
         this.searchResultsProducer = searchResultsProducer;
     }
@@ -68,27 +67,15 @@ public class BigkindsArticleService {
                     for (BigkindsResponse.Document document : bigkindsResponse.getReturnObject().getDocuments()) {
                         String title = document.getTitle();
                         String link = document.getProviderLinkPage();
-                        String pubDateStr = document.getPublishedAt();
-
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
-                        LocalDateTime pubDate = LocalDateTime.parse(pubDateStr, formatter);
 
                         if (!isDuplicateNews(title, link)) {
-                            String newsId = document.getNewsId();
-                            LocalDateTime createDatetime = LocalDateTime.now();
-                            LocalDateTime updateDatetime = LocalDateTime.now();
-                            int idSeq = searchParam.getId_seq();
-                            String description = document.getContent();
-                            String source = "BIGKINDS";
-                            String publisher = document.getProvider();
-                            String byline = document.getByline().replaceAll("\\|", " ");
-                            String author = byline;
 
-
-                            Article news = createBigkindsEntity(newsId, createDatetime, updateDatetime, idSeq, source, link, pubDate, publisher, title, description, author);
+                            Article news = articleMapper.bigkindsResponseToArticle(document);
+                            news.setIdSeq(searchParam.getId_seq());
 
                             String searchResultJson = objectMapper.writeValueAsString(news);
-                            searchResultsProducer.sendSearchResults(searchResultJson);
+                            //searchResultsProducer.sendSearchResults(searchResultJson);
+                            articleRepository.save(news);
                         }
                     }
                 }
@@ -97,24 +84,6 @@ public class BigkindsArticleService {
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
             throw new RuntimeException("검색 실패", e);
         }
-    }
-
-    // 검색결과 매핑하여 저장
-    private Article createBigkindsEntity(String newsId, LocalDateTime createDataTime, LocalDateTime updateDatetime, int idSeq, String source, String link,
-                                         LocalDateTime pubDate, String publisher, String title, String description, String author) {
-        Article news = new Article();
-        news.setNewsId(newsId);
-        news.setCreateDatetime(createDataTime);
-        news.setUpdateDatetime(updateDatetime);
-        news.setIdSeq(idSeq);
-        news.setSource(source);
-        news.setLink(link);
-        news.setPublishDatetime(pubDate);
-        news.setPublisher(publisher);
-        news.setTitle(title);
-        news.setPrevContent(description);
-        news.setAuthor(author);
-        return news;
     }
 
     private boolean isDuplicateNews(String title, String originLink) {
