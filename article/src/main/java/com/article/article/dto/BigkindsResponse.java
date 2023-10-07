@@ -20,8 +20,9 @@ public class BigkindsResponse {
 
         @JsonProperty("total_hits")
         private int totalHits;
-        @JsonProperty("documents")
+
         @Getter
+        @JsonProperty("documents")
         private Document[] documents;
 
     }

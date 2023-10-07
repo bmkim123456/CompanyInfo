@@ -2,8 +2,11 @@ package com.article.article.service;
 
 import com.article.article.component.SearchResultsProducer;
 import com.article.article.dto.CompanySearchParam;
+import com.article.article.dto.NaverResponse;
 import com.article.article.entity.Article;
+import com.article.article.mapper.ArticleMapper;
 import com.article.article.repository.ArticleRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -28,20 +31,22 @@ public class NaverArticleService {
     private static final Logger log = LoggerFactory.getLogger(NaverArticleService.class);
 
     private final ArticleRepository articleRepository;
+    private final ArticleMapper articleMapper;
     private final RestTemplate restTemplate;
     private final SearchResultsProducer searchResultsProducer;
 
-    public NaverArticleService(ArticleRepository articleRepository, RestTemplate restTemplate, SearchResultsProducer searchResultsProducer) {
+    public NaverArticleService(ArticleRepository articleRepository, ArticleMapper articleMapper, RestTemplate restTemplate, SearchResultsProducer searchResultsProducer) {
         this.articleRepository = articleRepository;
+        this.articleMapper = articleMapper;
         this.restTemplate = restTemplate;
         this.searchResultsProducer = searchResultsProducer;
     }
 
-    // 네이버 api키 사용횟수 카운트
+    // 네이버 api키 사용횟수 카운트 초기화
     AtomicLong KEY_COUNT = new AtomicLong(1);
 
-    // 네이버 뉴스 검색 로직
-    public String searchNaverArticle(CompanySearchParam searchParam) {
+
+    public NaverResponse searchNaverArticles (CompanySearchParam searchParam) throws JsonProcessingException {
         try {
             if (searchParam.getCompanyName().isEmpty() || searchParam.getCeoName().isEmpty()) {
                 log.info("회사명 또는 대표자명을 알 수 없습니다.");
@@ -50,91 +55,49 @@ public class NaverArticleService {
             } else if (searchParam.getCorporateStatus().equals("살아있는 등기") || searchParam.getCorporateStatus().equals("회생절차")
                     || searchParam.getCorporateStatus().equals("보전관리")) {
 
-                String encodedKeyword = encodeKeyword(searchParam.getCompanyName(), searchParam.getCeoName());
-                log.info(searchParam.getCompanyName() + " " + searchParam.getCeoName());
+                String encodedKeyword = searchParam.getCompanyName() + " " + searchParam.getCeoName();
+                log.info(encodedKeyword);
 
-                // 네이버 뉴스 검색 API 호출 URL 생성
                 String apiUrl = "https://openapi.naver.com/v1/search/news.json?query=" + encodedKeyword + "&display=100";
                 log.info("키 사용 횟수 : {}", KEY_COUNT.get());
                 KEY_COUNT.incrementAndGet();
 
+                // api 키값 설정
                 HttpHeaders headers = createRequestHeaders();
 
                 // API 호출
-                ResponseEntity<String> responseEntity = restTemplate.exchange(
-                        URI.create(apiUrl),
-                        HttpMethod.GET,
-                        new HttpEntity<>(headers),
-                        String.class
-                );
-
+                RestTemplate restTemplate = new RestTemplate();
+                ResponseEntity<NaverResponse> response = restTemplate.exchange(apiUrl, HttpMethod.GET, new HttpEntity<>(headers), NaverResponse.class);
                 ObjectMapper objectMapper = new ObjectMapper();
                 objectMapper.registerModule(new JavaTimeModule());
-                JsonNode rootNode = objectMapper.readTree(responseEntity.getBody());
-                JsonNode itemsNode = rootNode.get("items");
+                NaverResponse naverResponse = response.getBody();
 
-                String total = rootNode.get("total").asText();
-                log.info("네이버 기사 총 {}건", total);
+                int total = naverResponse.getTotal();
 
-                if (itemsNode != null && itemsNode.isArray()) {
+                if (naverResponse != null && naverResponse.getItems() != null) {
+                    for (NaverResponse.Items items : naverResponse.getItems()) {
+                        String title = items.getTitle();
+                        String originLink = items.getOriginalLink();
+                        LocalDateTime pubDate = items.getPubDate();
 
-                    for (JsonNode itemNode : itemsNode) {
-
-                        String title = itemNode.get("title").asText();
-                        String originLink = itemNode.get("originallink").asText();
-                        String pubDateStr = itemNode.get("pubDate").asText();
-
-                        // pubDate 값을 LocalDateTime으로 변환
-                        LocalDateTime pubDate = ZonedDateTime.parse(pubDateStr, DateTimeFormatter.RFC_1123_DATE_TIME).toLocalDateTime();
-
-                        // 최근 n년 이내의 뉴스인지 확인
                         if (isRecentNews(pubDate)) {
-                            // 뉴스 중복여부 확인 (제목, 원본링크)
                             if (!isDuplicateNews(title, originLink)) {
-                                int idSeq = searchParam.getId_seq();
-                                String link = itemNode.get("link").asText();
-                                String description = itemNode.get("description").asText();
-                                String source = "NAVER";
-                                LocalDateTime createDatetime = LocalDateTime.now();
-                                LocalDateTime updateDatetime = LocalDateTime.now();
-                                Article news = createNaverEntity(createDatetime, updateDatetime, idSeq, source, originLink, link, pubDate, title, description);
 
-                                // Naver entity에 수집된 정보를 rabbitmq로 전달
-                                String searchResultJson = objectMapper.writeValueAsString(news);
+                                Article naverArticle = articleMapper.naverResponseToArticle(items);
+                                naverArticle.setIdSeq(searchParam.getId_seq());
+
+                                String searchResultJson = objectMapper.writeValueAsString(naverArticle);
                                 searchResultsProducer.sendSearchResults(searchResultJson);
+
                             }
                         }
-                    }
-                } // log.info(responseEntity.getBody());
+                    } log.info("네이버 기사 총 {}건을 수집했습니다.", total);
+                }
             } else log.info("사업 활동 중이 아닌 기업 입니다.");
-            return "rabbitmq 전달 완료";
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("검색어 인코딩 실패", e);
-        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-            throw new RuntimeException("검색 실패", e);
+            return null;
+        } catch (RuntimeException e) {
+            return null;
         }
-    }
-
-    // 검색 키워드
-    private String encodeKeyword(String companyName, String ceoName) throws UnsupportedEncodingException {
-        String keyword = companyName + " " + ceoName;
-        return URLEncoder.encode(keyword, "UTF-8");
-    }
-
-    // 큐로 보낼 뉴스 데이터 매핑
-    private Article createNaverEntity(LocalDateTime createDataTime, LocalDateTime updateDatetime, int idSeq, String source, String originalLink, String link,
-                                      LocalDateTime pubDate, String title, String description) {
-        Article news = new Article();
-        news.setCreateDatetime(createDataTime);
-        news.setUpdateDatetime(updateDatetime);
-        news.setIdSeq(idSeq);
-        news.setSource(source);
-        news.setOriginLink(originalLink);
-        news.setLink(link);
-        news.setPublishDatetime(pubDate);
-        news.setTitle(title);
-        news.setPrevContent(description);
-        return news;
     }
 
     // 뉴스 중복 조회

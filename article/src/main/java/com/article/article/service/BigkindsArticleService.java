@@ -7,6 +7,7 @@ import com.article.article.dto.CompanySearchParam;
 import com.article.article.entity.Article;
 import com.article.article.mapper.ArticleMapper;
 import com.article.article.repository.ArticleRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
@@ -38,7 +39,7 @@ public class BigkindsArticleService {
     }
 
     // 빅카인즈 뉴스 검색로직
-    public BigkindsResponse searchBigkindsArticle (CompanySearchParam searchParam) {
+    public BigkindsResponse searchBigkindsArticle (CompanySearchParam searchParam) throws JsonProcessingException {
         try {
             if (searchParam.getCompanyName().isEmpty() || searchParam.getCeoName().isEmpty()) {
                 log.info("회사명 또는 대표자명을 알 수 없습니다.");
@@ -60,9 +61,10 @@ public class BigkindsArticleService {
                 objectMapper.registerModule(new JavaTimeModule());
                 BigkindsResponse bigkindsResponse = response.getBody();
 
+                // 빅카인즈 전체 기사 수 확인
                 int total = bigkindsResponse.getReturnObject().getTotalHits();
-                log.info("빅카인즈 기사 총 {}건", total);
 
+                // 기사가 있는 경우 중복검사 후 기사 수집
                 if (bigkindsResponse != null && bigkindsResponse.getReturnObject() != null && bigkindsResponse.getReturnObject().getDocuments() != null) {
                     for (BigkindsResponse.Document document : bigkindsResponse.getReturnObject().getDocuments()) {
                         String title = document.getTitle();
@@ -74,18 +76,19 @@ public class BigkindsArticleService {
                             news.setIdSeq(searchParam.getId_seq());
 
                             String searchResultJson = objectMapper.writeValueAsString(news);
-                            //searchResultsProducer.sendSearchResults(searchResultJson);
-                            articleRepository.save(news);
+                            searchResultsProducer.sendSearchResults(searchResultJson);
+
                         }
-                    }
+                    } log.info("빅카인즈 기사 수집 총 {}건 완료되었습니다.", total);
                 }
             } else log.info("사업 활동 중이 아닌 기업 입니다.");
             return null;
-        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-            throw new RuntimeException("검색 실패", e);
+        } catch (RuntimeException e) {
+            return null;
         }
     }
 
+    // 기사 중복 검사
     private boolean isDuplicateNews(String title, String originLink) {
         return articleRepository.existsByTitleOrOriginLink(title, originLink);
     }

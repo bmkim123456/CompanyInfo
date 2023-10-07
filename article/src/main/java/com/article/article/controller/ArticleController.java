@@ -2,6 +2,7 @@ package com.article.article.controller;
 
 import com.article.article.dto.BigkindsResponse;
 import com.article.article.dto.CompanySearchParam;
+import com.article.article.dto.NaverResponse;
 import com.article.article.service.BigkindsArticleService;
 import com.article.article.service.NaverArticleService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -25,8 +26,9 @@ public class ArticleController {
     }
 
     @PostMapping("/naver")
-    public ResponseEntity<String> searchArticle(@RequestBody CompanySearchParam searchParam) {
-        String result = naverArticleService.searchNaverArticle(searchParam);
+    public ResponseEntity<NaverResponse> searchArticle (@RequestBody CompanySearchParam searchParam)
+                                                throws JsonProcessingException {
+        NaverResponse result = naverArticleService.searchNaverArticles(searchParam);
         return ResponseEntity.ok(result);
     }
 

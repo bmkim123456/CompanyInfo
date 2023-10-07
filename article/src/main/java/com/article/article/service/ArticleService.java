@@ -2,6 +2,8 @@ package com.article.article.service;
 
 import com.article.article.dto.BigkindsResponse;
 import com.article.article.dto.CompanySearchParam;
+import com.article.article.dto.NaverResponse;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,9 +17,10 @@ public class ArticleService {
         this.bigkindsArticleService = bigkindsArticleService;
     }
 
-    public void articleSearch (CompanySearchParam searchParam) {
+    public void articleSearch (CompanySearchParam searchParam) throws JsonProcessingException {
 
-        String naver = naverArticleService.searchNaverArticle(searchParam);
+        NaverResponse naver = naverArticleService.searchNaverArticles(searchParam);
         BigkindsResponse bigkinds = bigkindsArticleService.searchBigkindsArticle(searchParam);
+
     }
 }

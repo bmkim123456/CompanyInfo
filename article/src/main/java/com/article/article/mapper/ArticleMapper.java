@@ -1,6 +1,7 @@
 package com.article.article.mapper;
 
 import com.article.article.dto.BigkindsResponse;
+import com.article.article.dto.NaverResponse;
 import com.article.article.entity.Article;
 import org.mapstruct.Mapper;
 
@@ -9,6 +10,23 @@ import java.time.format.DateTimeFormatter;
 
 @Mapper
 public interface ArticleMapper {
+
+    default Article naverResponseToArticle (NaverResponse.Items items) {
+
+        Article naverArticles = new Article();
+
+        naverArticles.setCreateDatetime(LocalDateTime.now());
+        naverArticles.setUpdateDatetime(LocalDateTime.now());
+        naverArticles.setSource("NAVER");
+        naverArticles.setOriginLink(items.getOriginalLink());
+        naverArticles.setLink(items.getLink());
+        naverArticles.setTitle(items.getTitle());
+        naverArticles.setPrevContent(items.getDescription());
+        naverArticles.setPublishDatetime(items.getPubDate());
+
+        return naverArticles;
+    }
+
 
     default Article bigkindsResponseToArticle (BigkindsResponse.Document response) {
 
@@ -35,4 +53,5 @@ public interface ArticleMapper {
 
         return bigkindsArticle;
     }
+
 }
