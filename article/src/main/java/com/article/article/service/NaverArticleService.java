@@ -47,6 +47,50 @@ public class NaverArticleService {
 
 
     public NaverResponse searchNaverArticles (CompanySearchParam searchParam) throws JsonProcessingException {
+
+        String encodedKeyword = searchParam.getCompanyName() + " " + searchParam.getCeoName();
+        log.info(encodedKeyword);
+
+        String apiUrl = "https://openapi.naver.com/v1/search/news.json?query=" + encodedKeyword + "&display=100";
+        log.info("키 사용 횟수 : {}", KEY_COUNT.get());
+        KEY_COUNT.incrementAndGet();
+
+        // api 키값 설정
+        HttpHeaders headers = createRequestHeaders();
+
+        // API 호출
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<NaverResponse> response = restTemplate.exchange(apiUrl, HttpMethod.GET, new HttpEntity<>(headers), NaverResponse.class);
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        NaverResponse naverResponse = response.getBody();
+
+        int total = naverResponse.getTotal();
+
+        if (naverResponse != null && naverResponse.getItems() != null) {
+            for (NaverResponse.Items items : naverResponse.getItems()) {
+                String title = items.getTitle();
+                String originLink = items.getOriginalLink();
+                LocalDateTime pubDate = items.getPubDate();
+
+                if (isRecentNews(pubDate)) {
+                    if (!isDuplicateNews(title, originLink)) {
+
+                        Article naverArticle = articleMapper.naverResponseToArticle(items);
+                        naverArticle.setIdSeq(searchParam.getId_seq());
+
+                        String searchResultJson = objectMapper.writeValueAsString(naverArticle);
+                        searchResultsProducer.sendSearchResults(searchResultJson);
+
+                    }
+                }
+            } log.info("네이버 기사 총 {}건을 수집했습니다.", total);
+        } return null;
+    }
+
+
+
+    /*public NaverResponse searchNaverArticles (CompanySearchParam searchParam) throws JsonProcessingException {
         try {
             if (searchParam.getCompanyName().isEmpty() || searchParam.getCeoName().isEmpty()) {
                 log.info("회사명 또는 대표자명을 알 수 없습니다.");
@@ -98,7 +142,7 @@ public class NaverArticleService {
         } catch (RuntimeException e) {
             return null;
         }
-    }
+    }*/
 
     // 뉴스 중복 조회
     private boolean isDuplicateNews(String title, String originLink) {

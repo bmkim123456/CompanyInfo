@@ -40,53 +40,43 @@ public class BigkindsArticleService {
 
     // 빅카인즈 뉴스 검색로직
     public BigkindsResponse searchBigkindsArticle (CompanySearchParam searchParam) throws JsonProcessingException {
-        try {
-            if (searchParam.getCompanyName().isEmpty() || searchParam.getCeoName().isEmpty()) {
-                log.info("회사명 또는 대표자명을 알 수 없습니다.");
-            } else if (searchParam.getTermination().equals("CLOSED")) {
-                log.info("수집을 진행하지 않습니다. 이유 : CLOSED");
-            } else if (searchParam.getCorporateStatus().equals("살아있는 등기") || searchParam.getCorporateStatus().equals("회생절차")
-                    || searchParam.getCorporateStatus().equals("보전관리")) {
 
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-                BigkindsRequestParam requestParam = new BigkindsRequestParam(searchParam.getCompanyName() + " " + searchParam.getCeoName());
+        BigkindsRequestParam requestParam = new BigkindsRequestParam(searchParam.getCompanyName() + " " + searchParam.getCeoName());
 
-                HttpEntity<BigkindsRequestParam> requestEntity = new HttpEntity<>(requestParam, headers);
+        HttpEntity<BigkindsRequestParam> requestEntity = new HttpEntity<>(requestParam, headers);
 
-                RestTemplate restTemplate = new RestTemplate();
-                ResponseEntity<BigkindsResponse> response = restTemplate.exchange(bigkindsUrl, HttpMethod.POST, requestEntity, BigkindsResponse.class);
-                ObjectMapper objectMapper = new ObjectMapper();
-                objectMapper.registerModule(new JavaTimeModule());
-                BigkindsResponse bigkindsResponse = response.getBody();
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<BigkindsResponse> response = restTemplate.exchange(bigkindsUrl, HttpMethod.POST, requestEntity, BigkindsResponse.class);
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        BigkindsResponse bigkindsResponse = response.getBody();
 
-                // 빅카인즈 전체 기사 수 확인
-                int total = bigkindsResponse.getReturnObject().getTotalHits();
+        // 빅카인즈 전체 기사 수 확인
+        int total = bigkindsResponse.getReturnObject().getTotalHits();
 
-                // 기사가 있는 경우 중복검사 후 기사 수집
-                if (bigkindsResponse != null && bigkindsResponse.getReturnObject() != null && bigkindsResponse.getReturnObject().getDocuments() != null) {
-                    for (BigkindsResponse.Document document : bigkindsResponse.getReturnObject().getDocuments()) {
-                        String title = document.getTitle();
-                        String link = document.getProviderLinkPage();
+        // 기사가 있는 경우 중복검사 후 기사 수집
+        if (bigkindsResponse != null && bigkindsResponse.getReturnObject() != null && bigkindsResponse.getReturnObject().getDocuments() != null) {
+            for (BigkindsResponse.Document document : bigkindsResponse.getReturnObject().getDocuments()) {
+                String title = document.getTitle();
+                String link = document.getProviderLinkPage();
 
-                        if (!isDuplicateNews(title, link)) {
+                if (!isDuplicateNews(title, link)) {
 
-                            Article news = articleMapper.bigkindsResponseToArticle(document);
-                            news.setIdSeq(searchParam.getId_seq());
+                    Article news = articleMapper.bigkindsResponseToArticle(document);
+                    news.setIdSeq(searchParam.getId_seq());
 
-                            String searchResultJson = objectMapper.writeValueAsString(news);
-                            searchResultsProducer.sendSearchResults(searchResultJson);
+                    String searchResultJson = objectMapper.writeValueAsString(news);
+                    searchResultsProducer.sendSearchResults(searchResultJson);
 
-                        }
-                    } log.info("빅카인즈 기사 수집 총 {}건 완료되었습니다.", total);
                 }
-            } else log.info("사업 활동 중이 아닌 기업 입니다.");
-            return null;
-        } catch (RuntimeException e) {
-            return null;
+            } log.info("빅카인즈 기사 수집 총 {}건 완료되었습니다.", total);
         }
+            return null;
     }
+
 
     // 기사 중복 검사
     private boolean isDuplicateNews(String title, String originLink) {
