@@ -59,7 +59,6 @@ public class NaverArticleService {
         HttpHeaders headers = createRequestHeaders();
 
         // API 호출
-        RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<NaverResponse> response = restTemplate.exchange(apiUrl, HttpMethod.GET, new HttpEntity<>(headers), NaverResponse.class);
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
@@ -82,6 +81,8 @@ public class NaverArticleService {
                         // 검색 결과 큐로 전달
                         String searchResultJson = objectMapper.writeValueAsString(naverArticle);
                         searchResultsProducer.sendSearchResults(searchResultJson);
+
+                        // articleRepository.save(naverArticle);
 
                     }
                 }

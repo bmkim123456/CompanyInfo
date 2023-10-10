@@ -36,7 +36,7 @@ public class SearchResultsConsumer {
 
             articleService.articleSearch(searchParam);
 
-            Thread.sleep(100);
+            Thread.sleep(3000);
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
             throw new RuntimeException("전달 실패", e);
         } catch (InterruptedException e) {

@@ -65,12 +65,14 @@ public class BigkindsArticleService {
 
                 if (!isDuplicateNews(title, link)) {
 
-                    Article news = articleMapper.bigkindsResponseToArticle(document);
-                    news.setIdSeq(searchParam.getId_seq());
+                    Article article = articleMapper.bigkindsResponseToArticle(document);
+                    article.setIdSeq(searchParam.getId_seq());
 
                     // 검색 결과 큐로 전달
-                    String searchResultJson = objectMapper.writeValueAsString(news);
+                    String searchResultJson = objectMapper.writeValueAsString(article);
                     searchResultsProducer.sendSearchResults(searchResultJson);
+
+                    //articleRepository.save(article);
 
                 }
             } log.info("빅카인즈 기사 수집 총 {}건 검색 되었습니다.", total);
