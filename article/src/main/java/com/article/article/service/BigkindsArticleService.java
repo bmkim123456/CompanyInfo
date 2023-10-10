@@ -68,10 +68,10 @@ public class BigkindsArticleService {
                     article.setIdSeq(searchParam.getId_seq());
 
                     // 검색 결과 큐로 전달
-                    String searchResultJson = objectMapper.writeValueAsString(article);
-                    searchResultsProducer.sendSearchResults(searchResultJson);
+                    /*String searchResultJson = objectMapper.writeValueAsString(article);
+                    searchResultsProducer.sendSearchResults(searchResultJson);*/
 
-                    //articleRepository.save(article);
+                    articleRepository.save(article);
 
                 }
             } log.info("빅카인즈 기사 수집 총 {}건 검색 되었습니다.", total);

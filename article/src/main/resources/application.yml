@@ -26,4 +26,3 @@ spring:
 bigkinds:
   api:
     url: "http://tools.kinds.or.kr:8888/search/news"
-    key: "661f02bd-536b-45de-adf2-e3a0764f0ffb"
