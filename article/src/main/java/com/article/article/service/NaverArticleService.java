@@ -91,7 +91,6 @@ public class NaverArticleService {
     }
 
 
-
     // 뉴스 중복 조회
     private boolean isDuplicateNews(String title, String originLink) {
         return articleRepository.existsByTitleOrOriginLink(title, originLink);

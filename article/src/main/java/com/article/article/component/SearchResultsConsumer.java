@@ -36,7 +36,7 @@ public class SearchResultsConsumer {
 
             articleService.articleSearch(searchParam);
 
-            Thread.sleep(3000);
+            Thread.sleep(2000);
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
             throw new RuntimeException("전달 실패", e);
         } catch (InterruptedException e) {
@@ -52,7 +52,6 @@ public class SearchResultsConsumer {
             Article article = objectMapper.readValue(searchResultJson, Article.class);
 
             // 가져온 JSON 데이터 저장
-            // Article news = createArticleEntity(article);
             Article news = articleMapper.createArticle(article);
             articleRepository.save(news);
 

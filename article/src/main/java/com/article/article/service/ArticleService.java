@@ -46,7 +46,7 @@ public class ArticleService {
                 NaverResponse naver = naverArticleService.searchNaverArticles(searchParam);
                 BigkindsResponse bigkinds = bigkindsArticleService.searchBigkindsArticle(searchParam);
 
-            } else log.info("기업명 {} 은(는) 사업 활동 중이 아닙니다.", searchParam.getCompanyName());
+            } else log.info("기업명 {} 은(는) 사업 활동 중이 아닙니다. 사유 : {}", searchParam.getCompanyName(), searchParam.getCorporateStatus());
 
         } catch (RuntimeException e) {
             throw new RuntimeException("오류가 발생하여 수집을 중단합니다.");

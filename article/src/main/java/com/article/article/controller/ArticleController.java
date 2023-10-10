@@ -45,6 +45,6 @@ public class ArticleController {
     public ResponseEntity<String> searchArticles (@RequestBody CompanySearchParam searchParam) throws JsonProcessingException {
 
         articleService.articleSearch(searchParam);
-        return null;
+        return ResponseEntity.ok("검색 완료");
     }
 }

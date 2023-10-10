@@ -7,6 +7,8 @@ import lombok.Setter;
 
 import javax.persistence.*;
 
+
+// 대표자명 null일 때 해당 기업 저장
 @Entity
 @Getter
 @Setter

@@ -16,6 +16,7 @@ public class AppConfig {
         return new RestTemplate();
     }
 
+    // 매핑자료 bean 등록
     @Bean
     public ArticleMapper articleMapper() {
         return new ArticleMapper() {
