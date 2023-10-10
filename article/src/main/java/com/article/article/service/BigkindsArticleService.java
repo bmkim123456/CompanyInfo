@@ -48,7 +48,6 @@ public class BigkindsArticleService {
 
         HttpEntity<BigkindsRequestParam> requestEntity = new HttpEntity<>(requestParam, headers);
 
-        RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<BigkindsResponse> response = restTemplate.exchange(bigkindsUrl, HttpMethod.POST, requestEntity, BigkindsResponse.class);
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
