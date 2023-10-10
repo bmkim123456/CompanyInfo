@@ -4,11 +4,9 @@ import com.article.entity.CompanyInfo;
 import com.article.repository.CompanyInfoRepository;
 import org.json.JSONObject;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -32,12 +30,10 @@ public class CompanySearchService {
 
     // 회사 정보를 가져오는 로직
     public String processUsersSequentially() {
-        Page<CompanyInfo> companyPage = companyInfoRepository.findAll(PageRequest.of(0, 100, Sort.by(Sort.Order.asc("idSeq"))));
+        Page<CompanyInfo> companyPage = companyInfoRepository.findAll(PageRequest.of(0, 1000, Sort.by(Sort.Order.asc("idSeq"))));
 
         List<CompanyInfo> companyInfos = companyPage.getContent();
-
-        /*Long idSeq = Integer.toUnsignedLong(336484);
-        List<CompanyInfo> companyInfos = companyInfoRepository.findByIdSeq(idSeq);*/
+        
         StringBuilder resultBuilder = new StringBuilder();
 
         for (CompanyInfo companyInfo : companyInfos) {
@@ -61,6 +57,8 @@ public class CompanySearchService {
                 // 큐로 기업정보 전달
                 rabbitTemplate.convertAndSend("company-info", jsonResult);
 
+                resultBuilder.append(jsonResult).append("\n");
+
                 // api로 기업정보 전달
                 /*String postUrl = "http://localhost:8085/api/article/search";
 
@@ -74,8 +72,6 @@ public class CompanySearchService {
                         requestEntity,
                         String.class
                 );*/
-
-                resultBuilder.append(jsonResult).append("\n");
 
                 TimeUnit.MILLISECONDS.sleep(1000);
             } catch (InterruptedException e) {
