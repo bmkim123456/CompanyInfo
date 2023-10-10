@@ -91,60 +91,6 @@ public class NaverArticleService {
 
 
 
-    /*public NaverResponse searchNaverArticles (CompanySearchParam searchParam) throws JsonProcessingException {
-        try {
-            if (searchParam.getCompanyName().isEmpty() || searchParam.getCeoName().isEmpty()) {
-                log.info("회사명 또는 대표자명을 알 수 없습니다.");
-            } else if (searchParam.getTermination().equals("CLOSED")) {
-                log.info("수집을 진행하지 않습니다. 이유 : CLOSED");
-            } else if (searchParam.getCorporateStatus().equals("살아있는 등기") || searchParam.getCorporateStatus().equals("회생절차")
-                    || searchParam.getCorporateStatus().equals("보전관리")) {
-
-                String encodedKeyword = searchParam.getCompanyName() + " " + searchParam.getCeoName();
-                log.info(encodedKeyword);
-
-                String apiUrl = "https://openapi.naver.com/v1/search/news.json?query=" + encodedKeyword + "&display=100";
-                log.info("키 사용 횟수 : {}", KEY_COUNT.get());
-                KEY_COUNT.incrementAndGet();
-
-                // api 키값 설정
-                HttpHeaders headers = createRequestHeaders();
-
-                // API 호출
-                RestTemplate restTemplate = new RestTemplate();
-                ResponseEntity<NaverResponse> response = restTemplate.exchange(apiUrl, HttpMethod.GET, new HttpEntity<>(headers), NaverResponse.class);
-                ObjectMapper objectMapper = new ObjectMapper();
-                objectMapper.registerModule(new JavaTimeModule());
-                NaverResponse naverResponse = response.getBody();
-
-                int total = naverResponse.getTotal();
-
-                if (naverResponse != null && naverResponse.getItems() != null) {
-                    for (NaverResponse.Items items : naverResponse.getItems()) {
-                        String title = items.getTitle();
-                        String originLink = items.getOriginalLink();
-                        LocalDateTime pubDate = items.getPubDate();
-
-                        if (isRecentNews(pubDate)) {
-                            if (!isDuplicateNews(title, originLink)) {
-
-                                Article naverArticle = articleMapper.naverResponseToArticle(items);
-                                naverArticle.setIdSeq(searchParam.getId_seq());
-
-                                String searchResultJson = objectMapper.writeValueAsString(naverArticle);
-                                searchResultsProducer.sendSearchResults(searchResultJson);
-
-                            }
-                        }
-                    } log.info("네이버 기사 총 {}건을 수집했습니다.", total);
-                }
-            } else log.info("사업 활동 중이 아닌 기업 입니다.");
-            return null;
-        } catch (RuntimeException e) {
-            return null;
-        }
-    }*/
-
     // 뉴스 중복 조회
     private boolean isDuplicateNews(String title, String originLink) {
         return articleRepository.existsByTitleOrOriginLink(title, originLink);

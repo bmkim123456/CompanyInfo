@@ -33,7 +33,7 @@ public class CompanySearchService {
         Page<CompanyInfo> companyPage = companyInfoRepository.findAll(PageRequest.of(0, 1000, Sort.by(Sort.Order.asc("idSeq"))));
 
         List<CompanyInfo> companyInfos = companyPage.getContent();
-        
+
         StringBuilder resultBuilder = new StringBuilder();
 
         for (CompanyInfo companyInfo : companyInfos) {
