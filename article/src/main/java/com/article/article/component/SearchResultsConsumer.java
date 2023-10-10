@@ -1,12 +1,10 @@
 package com.article.article.component;
 
-import com.article.article.dto.BigkindsResponse;
 import com.article.article.dto.CompanySearchParam;
 import com.article.article.entity.Article;
+import com.article.article.mapper.ArticleMapper;
 import com.article.article.repository.ArticleRepository;
 import com.article.article.service.ArticleService;
-import com.article.article.service.BigkindsArticleService;
-import com.article.article.service.NaverArticleService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,11 +17,13 @@ public class SearchResultsConsumer {
     private static final Logger log = LoggerFactory.getLogger(SearchResultsConsumer.class);
     private final ArticleRepository articleRepository;
     private final ArticleService articleService;
+    private final ArticleMapper articleMapper;
     private final ObjectMapper objectMapper;
 
-    public SearchResultsConsumer(ArticleRepository articleRepository, ArticleService articleService, ObjectMapper objectMapper) {
+    public SearchResultsConsumer(ArticleRepository articleRepository, ArticleService articleService, ArticleMapper articleMapper, ObjectMapper objectMapper) {
         this.articleRepository = articleRepository;
         this.articleService = articleService;
+        this.articleMapper = articleMapper;
         this.objectMapper = objectMapper;
     }
 
@@ -45,14 +45,15 @@ public class SearchResultsConsumer {
     }
 
     // 큐에 저장된 뉴스기사를 n개씩 가져와서 db에 저장
-    @RabbitListener(queues = "article-result", concurrency = "10")
+    @RabbitListener(queues = "article-result", concurrency = "1")
     public void receiveSearchResults(String searchResultJson) {
         try {
             // JSON 형태의 검색 결과를 가져오기
             Article article = objectMapper.readValue(searchResultJson, Article.class);
 
             // 가져온 JSON 데이터 저장
-            Article news = createArticleEntity(article);
+            // Article news = createArticleEntity(article);
+            Article news = articleMapper.createArticle(article);
             articleRepository.save(news);
 
             Thread.sleep(500);
@@ -63,20 +64,4 @@ public class SearchResultsConsumer {
         }
     }
 
-    private Article createArticleEntity(Article article) {
-        Article news = new Article();
-        news.setIdSeq(article.getIdSeq());
-        news.setSource(article.getSource());
-        news.setCreateDatetime(article.getCreateDatetime());
-        news.setTitle(article.getTitle());
-        news.setOriginLink(article.getOriginLink());
-        news.setLink(article.getLink());
-        news.setPrevContent(article.getPrevContent());
-        news.setUpdateDatetime(article.getUpdateDatetime());
-        news.setPublishDatetime(article.getPublishDatetime());
-        news.setNewsId(article.getNewsId());
-        news.setPublisher(article.getPublisher());
-        news.setAuthor(article.getAuthor());
-        return news;
-    }
 }

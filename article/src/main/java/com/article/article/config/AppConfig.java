@@ -28,6 +28,11 @@ public class AppConfig {
             public Article bigkindsResponseToArticle(BigkindsResponse.Document response) {
                 return ArticleMapper.super.bigkindsResponseToArticle(response);
             }
+
+            @Override
+            public Article createArticle(Article article) {
+                return ArticleMapper.super.createArticle(article);
+            }
         };
     }
 }
