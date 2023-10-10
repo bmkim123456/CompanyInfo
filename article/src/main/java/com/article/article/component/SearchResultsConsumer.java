@@ -45,7 +45,7 @@ public class SearchResultsConsumer {
     }
 
     // 큐에 저장된 뉴스기사를 n개씩 가져와서 db에 저장
-    @RabbitListener(queues = "article-result", concurrency = "1")
+    @RabbitListener(queues = "article-result", concurrency = "10")
     public void receiveSearchResults(String searchResultJson) {
         try {
             // JSON 형태의 검색 결과를 가져오기

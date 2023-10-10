@@ -6,7 +6,7 @@ public class SearchParamException extends RuntimeException{
     private final String companyName;
 
     public SearchParamException (String message, int idSeq, String companyName) {
-        super(message);
+        super(message + idSeq + " " + companyName);
         this.idSeq = idSeq;
         this.companyName = companyName;
     }

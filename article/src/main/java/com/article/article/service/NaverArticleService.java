@@ -45,7 +45,7 @@ public class NaverArticleService {
     // 네이버 api키 사용횟수 카운트 초기화
     AtomicLong KEY_COUNT = new AtomicLong(1);
 
-
+    // 네이버 뉴스기사 검새 로직
     public NaverResponse searchNaverArticles (CompanySearchParam searchParam) throws JsonProcessingException {
 
         String encodedKeyword = searchParam.getCompanyName() + " " + searchParam.getCeoName();
@@ -79,12 +79,13 @@ public class NaverArticleService {
                         Article naverArticle = articleMapper.naverResponseToArticle(items);
                         naverArticle.setIdSeq(searchParam.getId_seq());
 
+                        // 검색 결과 큐로 전달
                         String searchResultJson = objectMapper.writeValueAsString(naverArticle);
                         searchResultsProducer.sendSearchResults(searchResultJson);
 
                     }
                 }
-            } log.info("네이버 기사 총 {}건을 수집했습니다.", total);
+            } log.info("네이버 기사 총 {}건 검색 되었습니다.", total);
         } return null;
     }
 
