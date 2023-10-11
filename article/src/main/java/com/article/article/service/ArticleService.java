@@ -43,7 +43,6 @@ public class ArticleService {
             } else if (searchParam.getCorporateStatus().equals("살아있는 등기") || searchParam.getCorporateStatus().equals("회생절차")
                     || searchParam.getCorporateStatus().equals("보전관리")) {
 
-
                 NaverResponse naver = naverArticleService.searchNaverArticles(searchParam);
                 Thread.sleep(1000);
                 BigkindsResponse bigkinds = bigkindsArticleService.searchBigkindsArticle(searchParam);

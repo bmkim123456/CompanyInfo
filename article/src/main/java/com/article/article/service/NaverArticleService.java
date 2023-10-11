@@ -79,10 +79,10 @@ public class NaverArticleService {
                         naverArticle.setIdSeq(searchParam.getId_seq());
 
                         // 검색 결과 큐로 전달
-                        /*String searchResultJson = objectMapper.writeValueAsString(naverArticle);
-                        searchResultsProducer.sendSearchResults(searchResultJson);*/
+                        String searchResultJson = objectMapper.writeValueAsString(naverArticle);
+                        searchResultsProducer.sendSearchResults(searchResultJson);
 
-                        articleRepository.save(naverArticle);
+                        // articleRepository.save(naverArticle);
 
                     }
                 }

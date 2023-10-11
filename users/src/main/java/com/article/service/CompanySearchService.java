@@ -1,6 +1,7 @@
 package com.article.service;
 
 import com.article.entity.CompanyInfo;
+import com.article.mapper.CompanyInfoMapper;
 import com.article.repository.CompanyInfoRepository;
 import org.json.JSONObject;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -19,18 +20,19 @@ public class CompanySearchService {
 
     private final CompanyInfoRepository companyInfoRepository;
     private final RestTemplate restTemplate;
-
     private final RabbitTemplate rabbitTemplate;
+    private final CompanyInfoMapper companyInfoMapper;
 
-    public CompanySearchService(CompanyInfoRepository companyInfoRepository, RestTemplate restTemplate, RabbitTemplate rabbitTemplate) {
+    public CompanySearchService(CompanyInfoRepository companyInfoRepository, RestTemplate restTemplate, RabbitTemplate rabbitTemplate, CompanyInfoMapper companyInfoMapper) {
         this.companyInfoRepository = companyInfoRepository;
         this.restTemplate = restTemplate;
         this.rabbitTemplate = rabbitTemplate;
+        this.companyInfoMapper = companyInfoMapper;
     }
 
     // 회사 정보를 가져오는 로직
     public String processUsersSequentially() {
-        Page<CompanyInfo> companyPage = companyInfoRepository.findAll(PageRequest.of(0, 100, Sort.by(Sort.Order.asc("idSeq"))));
+        Page<CompanyInfo> companyPage = companyInfoRepository.findAll(PageRequest.of(0, 1, Sort.by(Sort.Order.asc("idSeq"))));
 
         List<CompanyInfo> companyInfos = companyPage.getContent();
 
@@ -45,18 +47,12 @@ public class CompanySearchService {
                     companyInfo.setCorporateStatus("null");
                 }
 
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("id_seq", companyInfo.getIdSeq());
-                jsonObject.put("companyName", companyInfo.getCompanyName());
-                jsonObject.put("ceoName", companyInfo.getCeoName());
-                jsonObject.put("termination", companyInfo.getTermination());
-                jsonObject.put("corporateStatus", companyInfo.getCorporateStatus());
+                JSONObject jsonObject = companyInfoMapper.companyInfoToJson(companyInfo);
                 String jsonResult = jsonObject.toString();
                 System.out.println("Sending JSON: " + jsonResult);
 
                 // 큐로 기업정보 전달
                 rabbitTemplate.convertAndSend("company-info", jsonResult);
-
                 resultBuilder.append(jsonResult).append("\n");
 
                 // api로 기업정보 전달
