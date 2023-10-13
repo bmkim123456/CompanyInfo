@@ -2,21 +2,26 @@ package com.article.article.mapper;
 
 import com.article.article.ArticleApplication;
 import com.article.article.dto.BigkindsResponse;
+import com.article.article.dto.CompanySearchParam;
 import com.article.article.dto.NaverResponse;
 import com.article.article.entity.Article;
+import com.article.article.entity.ArticleCnt;
 import org.mapstruct.Mapper;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 @Mapper
 public interface ArticleMapper {
 
     // 네이버 기사 검색 결과를 Article entity 컬럼과 일치하도록 매핑
-    default Article naverResponseToArticle (NaverResponse.Items items) {
+    default Article naverResponseToArticle (NaverResponse.Items items, CompanySearchParam searchParam) {
 
         Article naverArticles = new Article();
 
+        naverArticles.setIdSeq(searchParam.getId_seq());
         naverArticles.setCreateDatetime(LocalDateTime.now());
         naverArticles.setUpdateDatetime(LocalDateTime.now());
         naverArticles.setSource("NAVER");
@@ -27,6 +32,8 @@ public interface ArticleMapper {
         naverArticles.setPublishDatetime(items.getPubDate());
 
         return naverArticles;
+
+
     }
 
     // 빅카인즈 기사 검색 결과를 Article entity 컬럼과 일치하도록 매핑
@@ -34,17 +41,12 @@ public interface ArticleMapper {
 
         Article bigkindsArticle = new Article();
 
-        // 뉴스 발행일 String 타입으로 수집 후 LocalDateTime 형태로 변환
-        String pubDateStr = response.getPublishedAt();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
-        LocalDateTime pubDate = LocalDateTime.parse(pubDateStr, formatter);
-
         bigkindsArticle.setCreateDatetime(LocalDateTime.now());
         bigkindsArticle.setUpdateDatetime(LocalDateTime.now());
         bigkindsArticle.setSource("BIGKINDS");
         bigkindsArticle.setNewsId(response.getNewsId());
-        bigkindsArticle.setLink(response.getProviderLinkPage());
-        bigkindsArticle.setPublishDatetime(pubDate);
+        bigkindsArticle.setOriginLink(response.getProviderLinkPage());
+        bigkindsArticle.setPublishDatetime(response.getPublishedAt());
         bigkindsArticle.setPublisher(response.getProvider());
         bigkindsArticle.setTitle(response.getTitle());
         bigkindsArticle.setPrevContent(response.getContent());
@@ -58,20 +60,73 @@ public interface ArticleMapper {
 
     // 큐에 저장된 기사 정보를 Article entity 컬럼과 일치하도록 매핑
     default Article createArticle (Article article) {
-        Article news = new Article();
-        news.setIdSeq(article.getIdSeq());
-        news.setSource(article.getSource());
-        news.setCreateDatetime(article.getCreateDatetime());
-        news.setTitle(article.getTitle());
-        news.setOriginLink(article.getOriginLink());
-        news.setLink(article.getLink());
-        news.setPrevContent(article.getPrevContent());
-        news.setUpdateDatetime(article.getUpdateDatetime());
-        news.setPublishDatetime(article.getPublishDatetime());
-        news.setNewsId(article.getNewsId());
-        news.setPublisher(article.getPublisher());
-        news.setAuthor(article.getAuthor());
+
+
+            Article news = new Article();
+            news.setIdSeq(article.getIdSeq());
+            news.setSource(article.getSource());
+            news.setCreateDatetime(article.getCreateDatetime());
+            news.setTitle(article.getTitle());
+            news.setOriginLink(article.getOriginLink());
+            news.setLink(article.getLink());
+            news.setPrevContent(article.getPrevContent());
+            news.setUpdateDatetime(article.getUpdateDatetime());
+            news.setPublishDatetime(article.getPublishDatetime());
+            news.setNewsId(article.getNewsId());
+            news.setPublisher(article.getPublisher());
+            news.setAuthor(article.getAuthor());
+
+
         return news;
+    }
+
+    default ArticleCnt searchArticleCnt (Article article, CompanySearchParam searchParam) {
+
+            ArticleCnt articleCnt = new ArticleCnt();
+
+            int y = article.getPublishDatetime().getYear();
+            int m = article.getPublishDatetime().getMonthValue();
+            int d = article.getPublishDatetime().getDayOfMonth();
+
+            articleCnt.setIdSeq(searchParam.getId_seq());
+            articleCnt.setArticleY(y);
+            articleCnt.setArticleM(m);
+            articleCnt.setArticleD(d);
+            articleCnt.setArticleCnt(1);
+            articleCnt.setArticleYMD(article.getPublishDatetime().toLocalDate());
+
+        return articleCnt;
+    }
+
+    default ArticleCnt articleCntResult (ArticleCnt articleCnt) {
+
+        ArticleCnt articleResult = new ArticleCnt();
+        articleResult.setIdSeq(articleCnt.getIdSeq());
+        articleResult.setArticleY(articleCnt.getArticleY());
+        articleResult.setArticleM(articleCnt.getArticleM());
+        articleResult.setArticleD(articleCnt.getArticleD());
+        articleResult.setArticleYMD(articleCnt.getArticleYMD());
+        articleResult.setArticleCnt(articleCnt.getArticleCnt());
+
+        return articleResult;
+    }
+
+    default ArticleCnt createBigKindsArticleCnt(BigkindsResponse.Document response) {
+
+        ArticleCnt articleCnt = new ArticleCnt();
+
+        int y = response.getPublishedAt().getYear();
+        int m = response.getPublishedAt().getMonthValue();
+        int d = response.getPublishedAt().getDayOfMonth();
+
+        articleCnt.setArticleY(y);
+        articleCnt.setArticleM(m);
+        articleCnt.setArticleD(d);
+        articleCnt.setArticleCnt(1);
+        articleCnt.setArticleYMD(response.getPublishedAt().toLocalDate());
+
+        return articleCnt;
+
     }
 
 }

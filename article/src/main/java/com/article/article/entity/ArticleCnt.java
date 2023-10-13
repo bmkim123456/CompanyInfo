@@ -5,10 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
+import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -17,9 +16,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "article_aggr", schema = "public")
-public class ArticleCnt {
+public class ArticleCnt implements Serializable {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int articleId;
+
     @Column(name = "id_seq")
     private int idSeq;
 
@@ -33,9 +35,11 @@ public class ArticleCnt {
     private int articleD;
 
     @Column(name = "article_ymd")
-    private LocalDateTime articleYMD;
+    private LocalDate articleYMD;
 
     @Column(name = "article_cnt")
     private int articleCnt;
+
+
 
 }

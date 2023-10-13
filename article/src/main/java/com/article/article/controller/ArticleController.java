@@ -30,7 +30,7 @@ public class ArticleController {
 
     @PostMapping("/naver")
     public ResponseEntity<NaverResponse> searchArticle (@RequestBody CompanySearchParam searchParam)
-                                                throws JsonProcessingException {
+                                                throws InterruptedException {
         NaverResponse result = naverArticleService.searchNaverArticles(searchParam);
         return ResponseEntity.ok(result);
     }

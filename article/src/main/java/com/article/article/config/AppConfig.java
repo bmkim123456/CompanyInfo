@@ -1,12 +1,16 @@
 package com.article.article.config;
 
 import com.article.article.dto.BigkindsResponse;
+import com.article.article.dto.CompanySearchParam;
 import com.article.article.dto.NaverResponse;
 import com.article.article.entity.Article;
+import com.article.article.entity.ArticleCnt;
 import com.article.article.mapper.ArticleMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
 
 @Configuration
 public class AppConfig {
@@ -21,8 +25,8 @@ public class AppConfig {
     public ArticleMapper articleMapper() {
         return new ArticleMapper() {
             @Override
-            public Article naverResponseToArticle(NaverResponse.Items items) {
-                return ArticleMapper.super.naverResponseToArticle(items);
+            public Article naverResponseToArticle(NaverResponse.Items items, CompanySearchParam searchParam) {
+                return ArticleMapper.super.naverResponseToArticle(items, searchParam);
             }
 
             @Override
@@ -33,6 +37,21 @@ public class AppConfig {
             @Override
             public Article createArticle(Article article) {
                 return ArticleMapper.super.createArticle(article);
+            }
+
+            @Override
+            public ArticleCnt searchArticleCnt (Article article, CompanySearchParam searchParam) {
+                return ArticleMapper.super.searchArticleCnt(article, searchParam);
+            }
+
+            @Override
+            public ArticleCnt createBigKindsArticleCnt (BigkindsResponse.Document response) {
+                return ArticleMapper.super.createBigKindsArticleCnt(response);
+            }
+
+            @Override
+            public ArticleCnt articleCntResult (ArticleCnt articleCnt) {
+                return ArticleMapper.super.articleCntResult(articleCnt);
             }
         };
     }
