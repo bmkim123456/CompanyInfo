@@ -22,6 +22,10 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -65,42 +69,41 @@ public class BigkindsArticleService {
         // 빅카인즈 전체 기사 수 확인
         int total = bigkindsResponse.getReturnObject().getTotalHits();
 
+        List<Article> articleList = new ArrayList<>();
+        List<ArticleCnt> articleCntList = new ArrayList<>();
+
         // 수집한 자료가 있는지 여부 확인
         if (bigkindsResponse != null && bigkindsResponse.getReturnObject() != null && bigkindsResponse.getReturnObject().getDocuments() != null) {
-            for (BigkindsResponse.Document document : bigkindsResponse.getReturnObject().getDocuments()) {
-                String title = document.getTitle();
-                String originLink = document.getProviderLinkPage();
-                LocalDate ymd = document.getPublishedAt().toLocalDate();
+            List<BigkindsResponse.Document> nonDuplicateDocument = Arrays.stream(bigkindsResponse.getReturnObject().getDocuments())
+                    .filter(document -> !isDuplicateNews(document.getTitle(), document.getProviderLinkPage()))
+                    .collect(Collectors.toList());
 
-                // 기사가 있는 경우 중복검사 후 기사 수집
-                if (!isDuplicateNews(title, originLink)) {
+            for (BigkindsResponse.Document document : nonDuplicateDocument) {
+                LocalDate date = document.getPublishedAt().toLocalDate();
 
-                    Article article = articleMapper.bigkindsResponseToArticle(document);
-                    article.setIdSeq(searchParam.getId_seq());
+                ArticleCnt existingArticleCnt = articleCntList.stream()
+                        .filter(articleCnt -> articleCnt.getArticleYMD().isEqual(date))
+                        .findFirst()
+                        .orElse(null);
 
-                    /// 기사 발행일 일치여부 확인, 같은날 발행 된 기사는 카운트 +1
-                    /*if (!isDuplicateDate(ymd)) {
-                        ArticleCnt articleCnt = articleMapper.createBigKindsArticleCnt(document);
-                        articleCnt.setIdSeq(searchParam.getId_seq());
-                        articleCntRepository.save(articleCnt);
-                    } else {
-                        ArticleCnt findArticleCnt = articleCntRepository.findByArticleYMD(ymd);
-                        if (findArticleCnt != null) {
-                            findArticleCnt.setArticleCnt(findArticleCnt.getArticleCnt() + 1);
-                            articleCntRepository.save(findArticleCnt);
-                        }
-                    }*/
+                Article sendBigkindsArticle = articleMapper.bigkindsResponseToArticle(document, searchParam);
+                articleList.add(sendBigkindsArticle);
 
-                    // 검색 결과 큐로 전달
-                    /*String searchResultJson = objectMapper.writeValueAsString(article);
-                    searchResultsProducer.sendSearchResults(searchResultJson);*/
-
-                    articleRepository.save(article);
-
+                if (existingArticleCnt == null) {
+                    ArticleCnt articleCnt = articleMapper.searchArticleCnt(sendBigkindsArticle, searchParam);
+                    articleCntList.add(articleCnt);
+                } else {
+                    existingArticleCnt.setArticleCnt(existingArticleCnt.getArticleCnt() + 1);
                 }
-            } log.info("빅카인즈 기사 수집 총 {}건 검색 되었습니다.", total);
+
+            }
+            searchResultsProducer.sendSearchResults(articleList);
+            searchResultsProducer.sendArticleCntResult(articleCntList);
+            articleList.clear();
+            articleCntList.clear();
+            log.info("빅카인즈 기사 수집 총 {}건 검색 되었습니다.", total);
         }
-            return null;
+        return null;
     }
 
 

@@ -30,8 +30,8 @@ public class AppConfig {
             }
 
             @Override
-            public Article bigkindsResponseToArticle(BigkindsResponse.Document response) {
-                return ArticleMapper.super.bigkindsResponseToArticle(response);
+            public Article bigkindsResponseToArticle(BigkindsResponse.Document document, CompanySearchParam searchParam) {
+                return ArticleMapper.super.bigkindsResponseToArticle(document, searchParam);
             }
 
             @Override
@@ -42,11 +42,6 @@ public class AppConfig {
             @Override
             public ArticleCnt searchArticleCnt (Article article, CompanySearchParam searchParam) {
                 return ArticleMapper.super.searchArticleCnt(article, searchParam);
-            }
-
-            @Override
-            public ArticleCnt createBigKindsArticleCnt (BigkindsResponse.Document response) {
-                return ArticleMapper.super.createBigKindsArticleCnt(response);
             }
 
             @Override
