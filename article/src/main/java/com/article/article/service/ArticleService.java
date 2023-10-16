@@ -44,9 +44,9 @@ public class ArticleService {
                     || searchParam.getCorporateStatus().equals("보전관리")) {
 
                 NaverResponse naver = naverArticleService.searchNaverArticles(searchParam);
-                Thread.sleep(1000);
+                Thread.sleep(500);
                 BigkindsResponse bigkinds = bigkindsArticleService.searchBigkindsArticle(searchParam);
-                Thread.sleep(1000);
+                Thread.sleep(500);
 
             } else log.info("기업명 {} 은(는) 사업 활동 중이 아닙니다. 사유 : {}", searchParam.getCompanyName(), searchParam.getCorporateStatus());
 

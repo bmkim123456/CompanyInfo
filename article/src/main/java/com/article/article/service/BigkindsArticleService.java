@@ -90,8 +90,14 @@ public class BigkindsArticleService {
                 articleList.add(sendBigkindsArticle);
 
                 if (existingArticleCnt == null) {
-                    ArticleCnt articleCnt = articleMapper.searchArticleCnt(sendBigkindsArticle, searchParam);
-                    articleCntList.add(articleCnt);
+                    if (!isDuplicateArticleCnt(date)) {
+                        ArticleCnt articleCnt = articleMapper.searchArticleCnt(sendBigkindsArticle, searchParam);
+                        articleCntList.add(articleCnt);
+                    } else {
+                        ArticleCnt articleCnt = articleCntRepository.findByArticleYMD(date);
+                        articleCnt.setArticleCnt(articleCnt.getArticleCnt() + 1);
+                        articleCntRepository.save(articleCnt);
+                    }
                 } else {
                     existingArticleCnt.setArticleCnt(existingArticleCnt.getArticleCnt() + 1);
                 }
@@ -113,5 +119,8 @@ public class BigkindsArticleService {
     }
 
     // 날짜 중복 검사
+    private boolean isDuplicateArticleCnt(LocalDate articleYMD) {
+        return articleCntRepository.existsByArticleYMD(articleYMD);
+    }
 
 }

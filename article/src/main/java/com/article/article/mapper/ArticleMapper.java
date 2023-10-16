@@ -28,7 +28,7 @@ public interface ArticleMapper {
         naverArticles.setLink(items.getLink());
         naverArticles.setTitle(items.getTitle());
         naverArticles.setPrevContent(items.getDescription());
-        naverArticles.setPublishDatetime(items.getPubDate());
+        naverArticles.setPublishDatetime(items.getPubDate().toLocalDate());
         return naverArticles;
 
     }
@@ -43,7 +43,7 @@ public interface ArticleMapper {
         bigkindsArticle.setSource("BIGKINDS");
         bigkindsArticle.setNewsId(response.getNewsId());
         bigkindsArticle.setOriginLink(response.getProviderLinkPage());
-        bigkindsArticle.setPublishDatetime(response.getPublishedAt());
+        bigkindsArticle.setPublishDatetime(response.getPublishedAt().toLocalDate());
         bigkindsArticle.setPublisher(response.getProvider());
         bigkindsArticle.setTitle(response.getTitle());
         bigkindsArticle.setPrevContent(response.getContent());
@@ -88,7 +88,7 @@ public interface ArticleMapper {
          articleCnt.setArticleM(m);
          articleCnt.setArticleD(d);
          articleCnt.setArticleCnt(1);
-         articleCnt.setArticleYMD(article.getPublishDatetime().toLocalDate());
+         articleCnt.setArticleYMD(article.getPublishDatetime());
 
         return articleCnt;
     }

@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 // 뉴스 데이터 저장할 내용
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "naver_article", schema = "public")
+@Table(name = "article", schema = "public")
 public class Article implements Serializable {
 
     @Id
@@ -45,7 +46,7 @@ public class Article implements Serializable {
     private String link;
 
     @Column(name = "publish_datetime")
-    private LocalDateTime publishDatetime;
+    private LocalDate publishDatetime;
 
     @Column(name = "publisher")
     private String publisher;

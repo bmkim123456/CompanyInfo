@@ -16,11 +16,13 @@ import com.fasterxml.jackson.databind.util.JSONWrappedObject;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import javax.persistence.LockModeType;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -87,7 +89,7 @@ public class NaverArticleService {
             int total = naverResponse.getTotal();
 
             if (naverResponse != null && naverResponse.getItems() != null) {
-                // 중복되지 않은 항목만 필터링
+                // 제목과 링크 중복되지 않은 항목만 필터링
                 List<NaverResponse.Items> nonDuplicateItems = Arrays.stream(naverResponse.getItems())
                         .filter(items -> !isDuplicateNews(items.getTitle(), items.getOriginalLink()))
                         .collect(Collectors.toList());
@@ -96,6 +98,8 @@ public class NaverArticleService {
                     LocalDate date = items.getPubDate().toLocalDate();
 
                     // 기사 발행일에 따라 ArticleCnt를 찾거나 추가
+
+
                     ArticleCnt existingArticleCnt = articleCntList.stream()
                             .filter(articleCnt -> articleCnt.getArticleYMD().isEqual(date))
                             .findFirst()
@@ -105,8 +109,14 @@ public class NaverArticleService {
                     naverArticle.add(sendNaverArticle);
 
                     if (existingArticleCnt == null) {
-                        ArticleCnt articleCnt = articleMapper.searchArticleCnt(sendNaverArticle, searchParam);
-                        articleCntList.add(articleCnt);
+                        if (!isDuplicateArticleCnt(date)) {
+                            ArticleCnt articleCnt = articleMapper.searchArticleCnt(sendNaverArticle, searchParam);
+                            articleCntList.add(articleCnt);
+                        } else {
+                            ArticleCnt articleCnt = articleCntRepository.findByArticleYMD(date);
+                            articleCnt.setArticleCnt(articleCnt.getArticleCnt() + 1);
+                            articleCntRepository.save(articleCnt);
+                        }
                     } else {
                         existingArticleCnt.setArticleCnt(existingArticleCnt.getArticleCnt() + 1);
                     }
@@ -121,7 +131,7 @@ public class NaverArticleService {
             }
 
 
-            if (start > 100 || start > total) {
+            if (start > 1000 || start > total) {
                 log.info("네이버 기사 총 {}건 검색 되었습니다.", total);
                 break;
             }
@@ -134,6 +144,10 @@ public class NaverArticleService {
     // 뉴스 중복 조회
     private boolean isDuplicateNews(String title, String originLink) {
         return articleRepository.existsByTitleOrOriginLink(title, originLink);
+    }
+
+    private boolean isDuplicateArticleCnt(LocalDate articleYMD) {
+        return articleCntRepository.existsByArticleYMD(articleYMD);
     }
 
 
@@ -150,4 +164,6 @@ public class NaverArticleService {
         }
         return headers;
     }
+
+
 }
