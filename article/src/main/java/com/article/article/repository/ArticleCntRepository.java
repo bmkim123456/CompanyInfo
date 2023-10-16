@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface ArticleCntRepository extends JpaRepository<ArticleCnt, Integer> {
 
-    boolean existsByArticleYMD(LocalDate articleYMD);
+    boolean existsByIdSeqAndArticleYMD (Integer idSeq, LocalDate articleYMD);
 
     ArticleCnt findByArticleYMD (LocalDate articleYMD);
 }

@@ -93,7 +93,7 @@ public class BigkindsArticleService {
 
                 if (existingArticleCnt == null) {
                     // 수집한 목록과 DB를 모두 체크했을 때 최초 기사일 경우 신규 데이터 생성
-                    if (!isDuplicateArticleCnt(date)) {
+                    if (!isDuplicateArticleCnt(sendBigkindsArticle.getIdSeq(), date)) {
                         ArticleCnt articleCnt = articleMapper.searchArticleCnt(sendBigkindsArticle, searchParam);
                         articleCntList.add(articleCnt);
                     // 수집한 목록에는 신규 날짜지만 기존 DB에 이미 기사가 발행 된 이력이 있을 경우 기존 데이터 cnt 컬럼에 카운트 +1
@@ -121,12 +121,12 @@ public class BigkindsArticleService {
 
     // 기사 중복 검사
     private boolean isDuplicateNews(String title, String originLink) {
-        return articleRepository.existsByTitleOrOriginLink(title, originLink);
+        return articleRepository.existsByTitleAndOriginLink(title, originLink);
     }
 
     // 날짜 중복 검사
-    private boolean isDuplicateArticleCnt(LocalDate articleYMD) {
-        return articleCntRepository.existsByArticleYMD(articleYMD);
+    private boolean isDuplicateArticleCnt(Integer idSeq, LocalDate articleYMD) {
+        return articleCntRepository.existsByIdSeqAndArticleYMD(idSeq, articleYMD);
     }
 
 }

@@ -105,10 +105,12 @@ public class NaverArticleService {
                     // 수집한 기사를 리스트에 추가
                     Article sendNaverArticle = articleMapper.naverResponseToArticle(items, searchParam);
                     naverArticle.add(sendNaverArticle);
+                    System.out.println(existingArticleCnt);
+                    System.out.println(date);
 
                     if (existingArticleCnt == null) {
                         // 수집한 목록과 DB를 모두 체크했을 때 최초 기사일 경우 신규 데이터 생성
-                        if (!isDuplicateArticleCnt(date)) {
+                        if (!isDuplicateArticleCnt(sendNaverArticle.getIdSeq(), date)) {
                             ArticleCnt articleCnt = articleMapper.searchArticleCnt(sendNaverArticle, searchParam);
                             articleCntList.add(articleCnt);
                         // 수집한 목록에는 신규 날짜지만 기존 DB에 이미 기사가 발행 된 이력이 있을 경우 기존 데이터 cnt 컬럼에 카운트 +1
@@ -136,6 +138,8 @@ public class NaverArticleService {
                 break;
             }
 
+            Thread.sleep(500);
+
         }
         return null;
     }
@@ -143,12 +147,12 @@ public class NaverArticleService {
 
     // 뉴스 중복 조회
     private boolean isDuplicateNews(String title, String originLink) {
-        return articleRepository.existsByTitleOrOriginLink(title, originLink);
+        return articleRepository.existsByTitleAndOriginLink(title, originLink);
     }
 
     // 동일한 날짜에 발행된 기사가 있는지 확인
-    private boolean isDuplicateArticleCnt(LocalDate articleYMD) {
-        return articleCntRepository.existsByArticleYMD(articleYMD);
+    private boolean isDuplicateArticleCnt(Integer idSeq, LocalDate articleYMD) {
+        return articleCntRepository.existsByIdSeqAndArticleYMD(idSeq, articleYMD);
     }
 
     // 네이버 api 키 전달

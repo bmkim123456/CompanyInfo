@@ -12,6 +12,6 @@ import java.time.LocalDateTime;
 public interface ArticleRepository extends JpaRepository<Article, Long> {
 
     // 뉴스 중복 체크
-    boolean existsByTitleOrOriginLink(String title, String originLink);
+    boolean existsByTitleAndOriginLink(String title, String originLink);
 
 }
