@@ -61,19 +61,19 @@ public class BigkindsArticleService {
 
         HttpEntity<BigkindsRequestParam> requestEntity = new HttpEntity<>(requestParam, headers);
 
+        // api 호출
         ResponseEntity<BigkindsResponse> response = restTemplate.exchange(bigkindsUrl, HttpMethod.POST, requestEntity, BigkindsResponse.class);
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
         BigkindsResponse bigkindsResponse = response.getBody();
 
         // 빅카인즈 전체 기사 수 확인
         int total = bigkindsResponse.getReturnObject().getTotalHits();
 
+        // 원활한 큐 처리를 위해 데이터를 List에 담아서 전달
         List<Article> articleList = new ArrayList<>();
         List<ArticleCnt> articleCntList = new ArrayList<>();
 
-        // 수집한 자료가 있는지 여부 확인
         if (bigkindsResponse != null && bigkindsResponse.getReturnObject() != null && bigkindsResponse.getReturnObject().getDocuments() != null) {
+            // 제목과 링크 중복되지 않은 항목만 필터링
             List<BigkindsResponse.Document> nonDuplicateDocument = Arrays.stream(bigkindsResponse.getReturnObject().getDocuments())
                     .filter(document -> !isDuplicateNews(document.getTitle(), document.getProviderLinkPage()))
                     .collect(Collectors.toList());
@@ -81,28 +81,34 @@ public class BigkindsArticleService {
             for (BigkindsResponse.Document document : nonDuplicateDocument) {
                 LocalDate date = document.getPublishedAt().toLocalDate();
 
+                // 수집한 항목에서 같은 날짜에 발행 된 기사가 있는지 확인
                 ArticleCnt existingArticleCnt = articleCntList.stream()
                         .filter(articleCnt -> articleCnt.getArticleYMD().isEqual(date))
                         .findFirst()
                         .orElse(null);
 
+                // 수집한 기사를 리스트에 추가
                 Article sendBigkindsArticle = articleMapper.bigkindsResponseToArticle(document, searchParam);
                 articleList.add(sendBigkindsArticle);
 
                 if (existingArticleCnt == null) {
+                    // 수집한 목록과 DB를 모두 체크했을 때 최초 기사일 경우 신규 데이터 생성
                     if (!isDuplicateArticleCnt(date)) {
                         ArticleCnt articleCnt = articleMapper.searchArticleCnt(sendBigkindsArticle, searchParam);
                         articleCntList.add(articleCnt);
+                    // 수집한 목록에는 신규 날짜지만 기존 DB에 이미 기사가 발행 된 이력이 있을 경우 기존 데이터 cnt 컬럼에 카운트 +1
                     } else {
                         ArticleCnt articleCnt = articleCntRepository.findByArticleYMD(date);
                         articleCnt.setArticleCnt(articleCnt.getArticleCnt() + 1);
                         articleCntRepository.save(articleCnt);
                     }
+                // 같은 날짜에 발행된 다른 기사라면 cnt 컬럼에 +1
                 } else {
                     existingArticleCnt.setArticleCnt(existingArticleCnt.getArticleCnt() + 1);
                 }
 
             }
+            // 수집 결과를 큐로 보내준 후 리스트 초기화
             searchResultsProducer.sendSearchResults(articleList);
             searchResultsProducer.sendArticleCntResult(articleCntList);
             articleList.clear();

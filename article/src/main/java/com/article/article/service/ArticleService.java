@@ -34,7 +34,6 @@ public class ArticleService {
                 logRecord.setIdSeq(searchParam.getId_seq());
                 logRecord.setCompanyName(searchParam.getCompanyName());
                 logRecord.setReason("대표자 이름 없음");
-
                 logRepository.save(logRecord);
 
                 log.warn("기업명 {} 의 대표자명이 불분명하여 수집을 중단 합니다.", searchParam.getCompanyName());
