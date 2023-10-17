@@ -74,6 +74,7 @@ public class NaverArticleService {
             KEY_COUNT.incrementAndGet();
             start += 100;
 
+
             // api 키값 설정
             HttpHeaders headers = createRequestHeaders();
 
@@ -105,8 +106,6 @@ public class NaverArticleService {
                     // 수집한 기사를 리스트에 추가
                     Article sendNaverArticle = articleMapper.naverResponseToArticle(items, searchParam);
                     naverArticle.add(sendNaverArticle);
-                    System.out.println(existingArticleCnt);
-                    System.out.println(date);
 
                     if (existingArticleCnt == null) {
                         // 수집한 목록과 DB를 모두 체크했을 때 최초 기사일 경우 신규 데이터 생성
@@ -115,7 +114,7 @@ public class NaverArticleService {
                             articleCntList.add(articleCnt);
                         // 수집한 목록에는 신규 날짜지만 기존 DB에 이미 기사가 발행 된 이력이 있을 경우 기존 데이터 cnt 컬럼에 카운트 +1
                         } else {
-                            ArticleCnt articleCnt = articleCntRepository.findByArticleYMD(date);
+                            ArticleCnt articleCnt = articleCntRepository.findByIdSeqAndArticleYMD(sendNaverArticle.getIdSeq(), date);
                             articleCnt.setArticleCnt(articleCnt.getArticleCnt() + 1);
                             articleCntRepository.save(articleCnt);
                         }

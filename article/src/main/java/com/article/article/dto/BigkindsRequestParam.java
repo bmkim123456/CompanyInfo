@@ -37,7 +37,7 @@ public class BigkindsRequestParam {
         this.publishedAt = new PublishedAt();
         this.sort = new Sort("desc");
         this.returnFrom = 0;
-        this.returnSize = 100;
+        this.returnSize = 10000;
         // 반환할 필드 지정
         this.fields = List.of( "news_id", "published_at", "title", "content",
                 "provider", "byline", "category", "category_incident",
@@ -80,4 +80,3 @@ public class BigkindsRequestParam {
     }
 
 }
-

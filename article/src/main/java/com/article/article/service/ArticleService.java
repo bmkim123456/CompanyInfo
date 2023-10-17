@@ -27,26 +27,26 @@ public class ArticleService {
     public void articleSearch (CompanySearchParam searchParam) throws JsonProcessingException {
 
         try {
-            if (searchParam.getCeoName() == null) {
-
-                // 대표자명이 null 이어서 수집 못한 기업들 별도 리스트 저장
-                LogRecord logRecord = new LogRecord();
-                logRecord.setIdSeq(searchParam.getId_seq());
-                logRecord.setCompanyName(searchParam.getCompanyName());
-                logRecord.setReason("대표자 이름 없음");
-                logRepository.save(logRecord);
-
-                log.warn("기업명 {} 의 대표자명이 불분명하여 수집을 중단 합니다.", searchParam.getCompanyName());
-            } else if (searchParam.getTermination().equals("CLOSED")) {
-                log.info("기업명 {} 은(는) 수집을 진행하지 않습니다. 이유 : CLOSED", searchParam.getCompanyName());
-            } else if (searchParam.getCorporateStatus().equals("살아있는 등기") || searchParam.getCorporateStatus().equals("회생절차")
+            if (searchParam.getCorporateStatus().equals("살아있는 등기") || searchParam.getCorporateStatus().equals("회생절차")
                     || searchParam.getCorporateStatus().equals("보전관리")) {
+               if  (searchParam.getTermination().equals("CLOSED")) {
+                   log.info("기업명 {} 은(는) 수집을 진행하지 않습니다. 이유 : CLOSED", searchParam.getCompanyName());
+               } else if (searchParam.getCeoName() == null) {
 
-                NaverResponse naver = naverArticleService.searchNaverArticles(searchParam);
-                Thread.sleep(500);
-                BigkindsResponse bigkinds = bigkindsArticleService.searchBigkindsArticle(searchParam);
-                Thread.sleep(500);
+                   // 대표자명이 null 이어서 수집 못한 기업들 별도 리스트 저장
+                   LogRecord logRecord = new LogRecord();
+                   logRecord.setIdSeq(searchParam.getId_seq());
+                   logRecord.setCompanyName(searchParam.getCompanyName());
+                   logRecord.setReason("대표자 이름 없음");
+                   logRepository.save(logRecord);
 
+                   log.warn("기업명 {} 의 대표자명이 불분명하여 수집을 중단 합니다.", searchParam.getCompanyName());
+               } else {
+                   NaverResponse naver = naverArticleService.searchNaverArticles(searchParam);
+                   Thread.sleep(500);
+                   BigkindsResponse bigkinds = bigkindsArticleService.searchBigkindsArticle(searchParam);
+                   Thread.sleep(500);
+               }
             } else log.info("기업명 {} 은(는) 사업 활동 중이 아닙니다. 사유 : {}", searchParam.getCompanyName(), searchParam.getCorporateStatus());
 
         } catch (RuntimeException e) {

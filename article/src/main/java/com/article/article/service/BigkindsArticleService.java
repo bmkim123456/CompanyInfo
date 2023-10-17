@@ -98,7 +98,7 @@ public class BigkindsArticleService {
                         articleCntList.add(articleCnt);
                     // 수집한 목록에는 신규 날짜지만 기존 DB에 이미 기사가 발행 된 이력이 있을 경우 기존 데이터 cnt 컬럼에 카운트 +1
                     } else {
-                        ArticleCnt articleCnt = articleCntRepository.findByArticleYMD(date);
+                        ArticleCnt articleCnt = articleCntRepository.findByIdSeqAndArticleYMD(sendBigkindsArticle.getIdSeq(), date);
                         articleCnt.setArticleCnt(articleCnt.getArticleCnt() + 1);
                         articleCntRepository.save(articleCnt);
                     }
