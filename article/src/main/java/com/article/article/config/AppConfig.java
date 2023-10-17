@@ -5,7 +5,9 @@ import com.article.article.dto.CompanySearchParam;
 import com.article.article.dto.NaverResponse;
 import com.article.article.entity.Article;
 import com.article.article.entity.ArticleCnt;
+import com.article.article.entity.LogRecord;
 import com.article.article.mapper.ArticleMapper;
+import com.article.article.mapper.LogMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
@@ -46,6 +48,16 @@ public class AppConfig {
             @Override
             public ArticleCnt articleCntResult (ArticleCnt articleCnt) {
                 return ArticleMapper.super.articleCntResult(articleCnt);
+            }
+        };
+    }
+
+    @Bean
+    public LogMapper logMapper() {
+        return new LogMapper() {
+            @Override
+            public LogRecord companySearchParamToLogRecord(CompanySearchParam companySearchParam) {
+                return LogMapper.super.companySearchParamToLogRecord(companySearchParam);
             }
         };
     }

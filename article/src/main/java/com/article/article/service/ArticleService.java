@@ -6,6 +6,7 @@ import com.article.article.entity.Article;
 import com.article.article.entity.ArticleCnt;
 import com.article.article.entity.LogRecord;
 import com.article.article.mapper.ArticleMapper;
+import com.article.article.mapper.LogMapper;
 import com.article.article.repository.ArticleCntRepository;
 import com.article.article.repository.LogRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,16 +29,19 @@ public class ArticleService {
     private final ArticleMapper articleMapper;
     private final ArticleCntRepository articleCntRepository;
     private final LogRepository logRepository;
+    private final LogMapper logMapper;
     private static final Logger log = LoggerFactory.getLogger(ArticleService.class);
     private final SearchResultsProducer searchResultsProducer;
 
 
-    public ArticleService(NaverArticleService naverArticleService, BigkindsArticleService bigkindsArticleService, ArticleMapper articleMapper, ArticleCntRepository articleCntRepository, LogRepository logRepository, SearchResultsProducer searchResultsProducer) {
+    public ArticleService(NaverArticleService naverArticleService, BigkindsArticleService bigkindsArticleService, ArticleMapper articleMapper,
+                          ArticleCntRepository articleCntRepository, LogRepository logRepository, LogMapper logMapper, SearchResultsProducer searchResultsProducer) {
         this.naverArticleService = naverArticleService;
         this.bigkindsArticleService = bigkindsArticleService;
         this.articleMapper = articleMapper;
         this.articleCntRepository = articleCntRepository;
         this.logRepository = logRepository;
+        this.logMapper = logMapper;
         this.searchResultsProducer = searchResultsProducer;
     }
 
@@ -50,11 +54,8 @@ public class ArticleService {
                    log.info("기업명 {} 은(는) 수집을 진행하지 않습니다. 이유 : CLOSED", searchParam.getCompanyName());
                } else if (searchParam.getCeoName() == null) {
 
-                   // 대표자명이 null 이어서 수집 못한 기업들 별도 리스트 저장
-                   LogRecord logRecord = new LogRecord();
-                   logRecord.setIdSeq(searchParam.getId_seq());
-                   logRecord.setCompanyName(searchParam.getCompanyName());
-                   logRecord.setReason("대표자 이름 없음");
+                   // 대표자 이름 없어서 수집 못한 기업들 별도 리스트 저장
+                   LogRecord logRecord = logMapper.companySearchParamToLogRecord(searchParam);
                    logRepository.save(logRecord);
 
                    log.warn("기업명 {} 의 대표자명이 불분명하여 수집을 중단 합니다.", searchParam.getCompanyName());
