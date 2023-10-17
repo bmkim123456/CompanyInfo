@@ -8,7 +8,6 @@ import lombok.Setter;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -16,7 +15,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "article_aggr", schema = "public")
-public class ArticleCnt implements Serializable {
+public class ArticleCnt implements Serializable, Comparable<ArticleCnt> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,6 +39,9 @@ public class ArticleCnt implements Serializable {
     @Column(name = "article_cnt")
     private int articleCnt;
 
-
+    @Override
+    public int compareTo(ArticleCnt other) {
+        return this.articleYMD.compareTo(other.articleYMD);
+    }
 
 }

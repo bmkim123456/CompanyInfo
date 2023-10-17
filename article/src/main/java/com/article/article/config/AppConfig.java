@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
 
 @Configuration
 public class AppConfig {
@@ -30,8 +29,8 @@ public class AppConfig {
             }
 
             @Override
-            public Article bigkindsResponseToArticle(BigkindsResponse.Document document, CompanySearchParam searchParam) {
-                return ArticleMapper.super.bigkindsResponseToArticle(document, searchParam);
+            public Article bigKindsResponseToArticle (BigkindsResponse.Document response, CompanySearchParam searchParam) {
+                return ArticleMapper.super.bigKindsResponseToArticle(response, searchParam);
             }
 
             @Override

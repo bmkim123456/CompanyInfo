@@ -7,14 +7,12 @@ import com.article.article.mapper.ArticleMapper;
 import com.article.article.repository.ArticleCntRepository;
 import com.article.article.repository.ArticleRepository;
 import com.article.article.service.ArticleService;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Component

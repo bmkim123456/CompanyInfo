@@ -2,10 +2,8 @@ package com.article.article.component;
 
 import com.article.article.entity.Article;
 import com.article.article.entity.ArticleCnt;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

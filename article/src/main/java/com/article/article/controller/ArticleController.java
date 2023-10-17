@@ -1,8 +1,7 @@
 package com.article.article.controller;
 
-import com.article.article.dto.BigkindsResponse;
 import com.article.article.dto.CompanySearchParam;
-import com.article.article.dto.NaverResponse;
+import com.article.article.entity.Article;
 import com.article.article.service.ArticleService;
 import com.article.article.service.BigkindsArticleService;
 import com.article.article.service.NaverArticleService;
@@ -12,6 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("api/article")
@@ -29,15 +30,15 @@ public class ArticleController {
     }
 
     @PostMapping("/naver")
-    public ResponseEntity<NaverResponse> searchArticle (@RequestBody CompanySearchParam searchParam)
-                                                throws InterruptedException {
-        NaverResponse result = naverArticleService.searchNaverArticles(searchParam);
+    public ResponseEntity<List<Article>> searchArticle (@RequestBody CompanySearchParam searchParam)
+                                                throws InterruptedException, JsonProcessingException {
+        List<Article> result = naverArticleService.searchNaverArticles(searchParam);
         return ResponseEntity.ok(result);
     }
 
     @PostMapping("/bigkinds")
-    public ResponseEntity<BigkindsResponse> searchArticleBigkinds(@RequestBody CompanySearchParam searchParam) throws JsonProcessingException {
-        BigkindsResponse result = bigkindsArticleService.searchBigkindsArticle(searchParam);
+    public ResponseEntity<List<Article>> searchArticleBigkinds(@RequestBody CompanySearchParam searchParam) throws JsonProcessingException {
+        List<Article> result = bigkindsArticleService.searchBigkindsArticle(searchParam);
         return ResponseEntity.ok(result);
     }
 

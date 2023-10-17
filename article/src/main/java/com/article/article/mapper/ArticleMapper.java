@@ -1,6 +1,5 @@
 package com.article.article.mapper;
 
-import com.article.article.ArticleApplication;
 import com.article.article.dto.BigkindsResponse;
 import com.article.article.dto.CompanySearchParam;
 import com.article.article.dto.NaverResponse;
@@ -9,9 +8,6 @@ import com.article.article.entity.ArticleCnt;
 import org.mapstruct.Mapper;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 
 @Mapper
 public interface ArticleMapper {
@@ -34,7 +30,7 @@ public interface ArticleMapper {
     }
 
     // 빅카인즈 기사 검색 결과를 Article entity 컬럼과 일치하도록 매핑
-    default Article bigkindsResponseToArticle (BigkindsResponse.Document response, CompanySearchParam searchParam) {
+    default Article bigKindsResponseToArticle (BigkindsResponse.Document response, CompanySearchParam searchParam) {
 
         Article bigkindsArticle = new Article();
         bigkindsArticle.setCreateDatetime(LocalDateTime.now());

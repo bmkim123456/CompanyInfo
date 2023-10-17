@@ -65,4 +65,5 @@ public class Article implements Serializable {
 
     @Column(name = "images")
     private String images;
+
 }
