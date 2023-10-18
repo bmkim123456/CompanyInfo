@@ -1,12 +1,15 @@
 package com.article.service;
 
 import com.article.entity.CompanyInfo;
+import com.article.entity.Identified;
 import com.article.mapper.CompanyInfoMapper;
 import com.article.repository.CompanyInfoRepository;
+import com.article.repository.IdentifiedRepository;
 import org.json.JSONObject;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -19,40 +22,33 @@ public class CompanySearchService {
 
 
     private final CompanyInfoRepository companyInfoRepository;
-    private final RestTemplate restTemplate;
     private final RabbitTemplate rabbitTemplate;
     private final CompanyInfoMapper companyInfoMapper;
+    private final IdentifiedRepository identifiedRepository;
 
-    public CompanySearchService(CompanyInfoRepository companyInfoRepository, RestTemplate restTemplate, RabbitTemplate rabbitTemplate, CompanyInfoMapper companyInfoMapper) {
+    public CompanySearchService(CompanyInfoRepository companyInfoRepository, RabbitTemplate rabbitTemplate, CompanyInfoMapper companyInfoMapper, IdentifiedRepository identifiedRepository) {
         this.companyInfoRepository = companyInfoRepository;
-        this.restTemplate = restTemplate;
         this.rabbitTemplate = rabbitTemplate;
         this.companyInfoMapper = companyInfoMapper;
+        this.identifiedRepository = identifiedRepository;
     }
 
     // 회사 정보를 가져오는 로직
     public String processUsersSequentially() {
-        Page<CompanyInfo> companyPage = companyInfoRepository.findAll(PageRequest.of(0, 100, Sort.by(Sort.Order.asc("idSeq"))));
 
-        List<CompanyInfo> companyInfos = companyPage.getContent();
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Identified> identifiedList = identifiedRepository.findMatchingCompanies(pageable);
 
         StringBuilder resultBuilder = new StringBuilder();
 
-        for (CompanyInfo companyInfo : companyInfos) {
+        for (Identified identified : identifiedList) {
             try {
-                if (companyInfo.getTermination() == null) {
-                    companyInfo.setTermination("null");
-                }
-                if (companyInfo.getCorporateStatus() == null) {
-                    companyInfo.setCorporateStatus("null");
-                }
-
-                JSONObject jsonObject = companyInfoMapper.companyInfoToJson(companyInfo);
+                JSONObject jsonObject = companyInfoMapper.companyInfoToJson(identified);
                 String jsonResult = jsonObject.toString();
                 System.out.println("Sending JSON: " + jsonResult);
 
                 // 큐로 기업정보 전달
-                rabbitTemplate.convertAndSend("company-info", jsonResult);
+                rabbitTemplate.convertAndSend("hubble.article.queue", jsonResult);
                 resultBuilder.append(jsonResult).append("\n");
 
                 // api로 기업정보 전달
@@ -69,7 +65,7 @@ public class CompanySearchService {
                         String.class
                 );*/
 
-                TimeUnit.MILLISECONDS.sleep(3000);
+                TimeUnit.MILLISECONDS.sleep(500);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return "Error";

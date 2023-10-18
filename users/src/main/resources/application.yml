@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://221.168.33.92:5433/hubble
+    url: jdbc:postgresql://221.168.33.92:5432/hubble_tmp
     username: hubble
-    password: "!Hubble1026!"
+    password: "!1026Antock!"
 
   jpa:
     hibernate:
@@ -12,7 +12,7 @@ spring:
       ddl-auto: update
 
   rabbitmq:
-    host: localhost
+    host: 192.168.0.173
     port: 5672
-    username: guest
-    password: guest
+    username: admin
+    password: "@1026Antock@"

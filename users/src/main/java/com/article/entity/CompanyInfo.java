@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 
 @Entity
 @Getter
@@ -24,6 +25,6 @@ public class CompanyInfo {
     @Column(name = "corporate_status")
     private String corporateStatus;
 
-    @Column(name = "termination")
-    private String termination;
+    @Column(name = "termination_date")
+    private LocalDate terminationDate;
 }

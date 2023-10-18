@@ -1,6 +1,7 @@
 package com.article.config;
 
 import com.article.entity.CompanyInfo;
+import com.article.entity.Identified;
 import com.article.mapper.CompanyInfoMapper;
 import org.json.JSONObject;
 import org.springframework.context.annotation.Bean;
@@ -19,8 +20,8 @@ public class AppConfig {
     public CompanyInfoMapper companyInfoMapper() {
         return new CompanyInfoMapper() {
             @Override
-            public JSONObject companyInfoToJson(CompanyInfo companyInfo) {
-                return CompanyInfoMapper.super.companyInfoToJson(companyInfo);
+            public JSONObject companyInfoToJson(Identified identified) {
+                return CompanyInfoMapper.super.companyInfoToJson(identified);
             }
         };
     }
