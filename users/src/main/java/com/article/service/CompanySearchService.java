@@ -69,7 +69,7 @@ public class CompanySearchService {
                         String.class
                 );*/
 
-                TimeUnit.MILLISECONDS.sleep(2000);
+                TimeUnit.MILLISECONDS.sleep(3000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return "Error";

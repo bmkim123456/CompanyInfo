@@ -14,7 +14,7 @@ import javax.persistence.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "exception", schema = "public")
+@Table(name = "log_record", schema = "public")
 public class LogRecord {
 
     @Id

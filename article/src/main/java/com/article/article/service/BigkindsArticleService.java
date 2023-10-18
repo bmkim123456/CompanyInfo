@@ -4,8 +4,9 @@ import com.article.article.dto.BigkindsRequestParam;
 import com.article.article.dto.BigkindsResponse;
 import com.article.article.dto.CompanySearchParam;
 import com.article.article.entity.Article;
+import com.article.article.entity.ArticleCnt;
 import com.article.article.mapper.ArticleMapper;
-import com.article.article.repository.ArticleRepository;
+import com.article.article.repository.ArticleCntRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,10 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -28,13 +28,12 @@ public class BigkindsArticleService {
     private String bigkindsUrl;
 
     private static final Logger log = LoggerFactory.getLogger(BigkindsArticleService.class);
-
-    private final ArticleRepository articleRepository;
+    private final ArticleCntRepository articleCntRepository;
     private final ArticleMapper articleMapper;
     private final RestTemplate restTemplate;
 
-    public BigkindsArticleService(ArticleRepository articleRepository, ArticleMapper articleMapper, RestTemplate restTemplate) {
-        this.articleRepository = articleRepository;
+    public BigkindsArticleService(ArticleCntRepository articleCntRepository, ArticleMapper articleMapper, RestTemplate restTemplate) {
+        this.articleCntRepository = articleCntRepository;
         this.articleMapper = articleMapper;
         this.restTemplate = restTemplate;
     }
@@ -48,6 +47,11 @@ public class BigkindsArticleService {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         BigkindsRequestParam requestParam = new BigkindsRequestParam(searchParam.getCompanyName() + " " + searchParam.getCeoName());
+        if (articleCntRepository.findFirstByidSeqOrderByArticleYMDDesc(searchParam.getId_seq()) != null)  {
+            ArticleCnt latestArticleCnt = articleCntRepository.findFirstByidSeqOrderByArticleYMDDesc(searchParam.getId_seq());
+            LocalDate latestDate = latestArticleCnt.getArticleYMD();
+            requestParam.setStartDate(latestDate);
+        }
 
         HttpEntity<BigkindsRequestParam> requestEntity = new HttpEntity<>(requestParam, headers);
 
@@ -59,12 +63,7 @@ public class BigkindsArticleService {
         int total = bigkindsResponse.getReturnObject().getTotalHits();
 
         if (bigkindsResponse != null && bigkindsResponse.getReturnObject() != null && bigkindsResponse.getReturnObject().getDocuments() != null) {
-            // 제목과 링크 중복되지 않은 항목만 필터링
-            List<BigkindsResponse.Document> nonDuplicateDocument = Arrays.stream(bigkindsResponse.getReturnObject().getDocuments())
-                    .filter(document -> !isDuplicateNews(document.getTitle(), document.getProviderLinkPage()))
-                    .collect(Collectors.toList());
-
-            for (BigkindsResponse.Document document : nonDuplicateDocument) {
+            for (BigkindsResponse.Document document : bigkindsResponse.getReturnObject().getDocuments()) {
 
                 // 수집한 기사를 리스트에 추가
                 Article sendBigkindsArticle = articleMapper.bigKindsResponseToArticle(document, searchParam);
@@ -75,12 +74,6 @@ public class BigkindsArticleService {
             log.info("빅카인즈 기사 수집 총 {}건 검색 되었습니다.", total);
         }
         return articleList;
-    }
-
-
-    // 기사 중복 검사
-    private boolean isDuplicateNews(String title, String originLink) {
-        return articleRepository.existsByTitleAndOriginLink(title, originLink);
     }
 
 

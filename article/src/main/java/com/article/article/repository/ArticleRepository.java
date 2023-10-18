@@ -8,7 +8,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ArticleRepository extends JpaRepository<Article, Long> {
 
-    // 뉴스 중복 체크
-    boolean existsByTitleAndOriginLink(String title, String originLink);
 
 }

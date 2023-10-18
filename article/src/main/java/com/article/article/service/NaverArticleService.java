@@ -3,8 +3,9 @@ package com.article.article.service;
 import com.article.article.dto.CompanySearchParam;
 import com.article.article.dto.NaverResponse;
 import com.article.article.entity.Article;
+import com.article.article.entity.ArticleCnt;
 import com.article.article.mapper.ArticleMapper;
-import com.article.article.repository.ArticleRepository;
+import com.article.article.repository.ArticleCntRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,12 +26,12 @@ public class NaverArticleService {
 
     private static final Logger log = LoggerFactory.getLogger(NaverArticleService.class);
 
-    private final ArticleRepository articleRepository;
+    private final ArticleCntRepository articleCntRepository;
     private final ArticleMapper articleMapper;
     private final RestTemplate restTemplate;
 
-    public NaverArticleService(ArticleRepository articleRepository, ArticleMapper articleMapper, RestTemplate restTemplate) {
-        this.articleRepository = articleRepository;
+    public NaverArticleService(ArticleCntRepository articleCntRepository, ArticleMapper articleMapper, RestTemplate restTemplate) {
+        this.articleCntRepository = articleCntRepository;
         this.articleMapper = articleMapper;
         this.restTemplate = restTemplate;
     }
@@ -61,14 +63,26 @@ public class NaverArticleService {
             NaverResponse naverResponse = response.getBody();
 
             int total = naverResponse.getTotal();
+            int responseSize = 0;
 
             if (naverResponse != null && naverResponse.getItems() != null) {
-                // 제목과 링크 중복되지 않은 항목만 필터링
-                List<NaverResponse.Items> nonDuplicateItems = Arrays.stream(naverResponse.getItems())
-                        .filter(items -> !isDuplicateNews(items.getTitle(), items.getOriginalLink()))
+
+                List<NaverResponse.Items> lastDateItems = Arrays.stream(naverResponse.getItems())
+                        .filter(items -> {
+                            if (searchParam.getId_seq() != 0) {
+                                ArticleCnt latestArticleCnt = articleCntRepository.findFirstByidSeqOrderByArticleYMDDesc(searchParam.getId_seq());
+                                if (latestArticleCnt != null) {
+                                    LocalDate latestDate = latestArticleCnt.getArticleYMD();
+                                    return items.getPubDate().toLocalDate().isAfter(latestDate);
+                                }
+                            }
+                            return true;
+                        })
                         .collect(Collectors.toList());
 
-                for (NaverResponse.Items items : nonDuplicateItems) {
+                responseSize = lastDateItems.size();
+
+                for (NaverResponse.Items items : lastDateItems) {
 
                     // 수집한 기사를 리스트에 추가
                     Article sendNaverArticle = articleMapper.naverResponseToArticle(items, searchParam);
@@ -77,7 +91,7 @@ public class NaverArticleService {
                 }
             }
 
-            if (start > 1000 || start > total) {
+            if (start > 1000 || start > total || responseSize < 100) {
                 log.info("네이버 기사 총 {}건 검색 되었습니다.", total);
                 break;
             }
@@ -86,11 +100,6 @@ public class NaverArticleService {
 
         }
         return naverArticle;
-    }
-
-    // 뉴스 중복 조회
-    private boolean isDuplicateNews(String title, String originLink) {
-        return articleRepository.existsByTitleAndOriginLink(title, originLink);
     }
 
     // 네이버 api 키 전달

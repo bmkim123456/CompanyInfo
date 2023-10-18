@@ -60,9 +60,9 @@ public class ArticleService {
 
                    log.warn("기업명 {} 의 대표자명이 불분명하여 수집을 중단 합니다.", searchParam.getCompanyName());
                } else {
-                   List<Article> bigkindsArticle = bigkindsArticleService.searchBigkindsArticle(searchParam);
-                   Thread.sleep(500);
                    List<Article> naverArticle = naverArticleService.searchNaverArticles(searchParam);
+                   Thread.sleep(500);
+                   List<Article> bigkindsArticle = bigkindsArticleService.searchBigkindsArticle(searchParam);
                    Thread.sleep(500);
 
                    List<ArticleCnt> articleCntList = new ArrayList<>();
@@ -97,9 +97,11 @@ public class ArticleService {
                    }
 
                    Collections.sort(articleCntList);
+                   log.info("전체 {}건 수집되었습니다.", articleCntList.size());
 
                    // searchResultsProducer.sendSearchResults(combinedList);
-                   searchResultsProducer.sendArticleCntResult(articleCntList);
+                   // searchResultsProducer.sendArticleCntResult(articleCntList);
+                   articleCntRepository.saveAll(articleCntList);
                    combinedList.clear();
                    articleCntList.clear();
 

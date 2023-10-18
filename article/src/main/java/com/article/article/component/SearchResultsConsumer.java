@@ -23,14 +23,12 @@ public class SearchResultsConsumer {
     private final ArticleCntRepository articleCntRepository;
     private final ArticleService articleService;
     private final ArticleMapper articleMapper;
-    private final ObjectMapper objectMapper;
 
-    public SearchResultsConsumer(ArticleRepository articleRepository, ArticleCntRepository articleCntRepository, ArticleService articleService, ArticleMapper articleMapper, ObjectMapper objectMapper) {
+    public SearchResultsConsumer(ArticleRepository articleRepository, ArticleCntRepository articleCntRepository, ArticleService articleService, ArticleMapper articleMapper) {
         this.articleRepository = articleRepository;
         this.articleCntRepository = articleCntRepository;
         this.articleService = articleService;
         this.articleMapper = articleMapper;
-        this.objectMapper = objectMapper;
     }
 
     // 큐에 저장된 기업 정보를 가져옴

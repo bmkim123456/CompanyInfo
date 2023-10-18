@@ -19,7 +19,7 @@ public class ArticleCnt implements Serializable, Comparable<ArticleCnt> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int articleId;
+    private Long articleId;
 
     @Column(name = "id_seq")
     private int idSeq;
