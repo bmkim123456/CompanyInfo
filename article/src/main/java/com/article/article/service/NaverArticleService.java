@@ -95,6 +95,7 @@ public class NaverArticleService {
                 log.info("네이버 기사 총 {}건 검색 되었습니다.", total);
                 break;
             }
+            int a = 0;
 
             Thread.sleep(500);
 
