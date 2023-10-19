@@ -36,7 +36,7 @@ public class CompanySearchService {
     // 회사 정보를 가져오는 로직
     public String processUsersSequentially() {
 
-        Pageable pageable = PageRequest.of(0, 10);
+        Pageable pageable = PageRequest.of(1, 10000);
         Page<Identified> identifiedList = identifiedRepository.findMatchingCompanies(pageable);
 
         StringBuilder resultBuilder = new StringBuilder();

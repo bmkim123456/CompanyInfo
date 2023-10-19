@@ -32,7 +32,7 @@ public class SearchResultsConsumer {
     }
 
     // 큐에 저장된 기업 정보를 가져옴
-    @RabbitListener(queues = "company-info", concurrency = "1")
+    @RabbitListener(queues = "hubble.article.queue", concurrency = "1")
     public void receiveCompanyInfo (String message) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -40,7 +40,7 @@ public class SearchResultsConsumer {
 
             articleService.articleSearch(searchParam);
 
-            Thread.sleep(2000);
+            Thread.sleep(1000);
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
             throw new RuntimeException("전달 실패", e);
         } catch (InterruptedException e) {
@@ -48,7 +48,7 @@ public class SearchResultsConsumer {
         }
     }
 
-    // 큐에 저장된 뉴스기사를 n개씩 가져와서 db에 저장
+    /*// 큐에 저장된 뉴스기사를 n개씩 가져와서 db에 저장
     @RabbitListener(queues = "article-result", concurrency = "1")
     public void receiveSearchResults(List<Article> articles) {
         try {
@@ -79,6 +79,6 @@ public class SearchResultsConsumer {
         }  catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-    }
+    }*/
 
 }

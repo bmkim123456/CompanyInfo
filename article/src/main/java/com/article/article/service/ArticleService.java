@@ -28,21 +28,15 @@ public class ArticleService {
     private final BigkindsArticleService bigkindsArticleService;
     private final ArticleMapper articleMapper;
     private final ArticleCntRepository articleCntRepository;
-    private final LogRepository logRepository;
-    private final LogMapper logMapper;
     private static final Logger log = LoggerFactory.getLogger(ArticleService.class);
-    private final SearchResultsProducer searchResultsProducer;
 
 
     public ArticleService(NaverArticleService naverArticleService, BigkindsArticleService bigkindsArticleService, ArticleMapper articleMapper,
-                          ArticleCntRepository articleCntRepository, LogRepository logRepository, LogMapper logMapper, SearchResultsProducer searchResultsProducer) {
+                          ArticleCntRepository articleCntRepository) {
         this.naverArticleService = naverArticleService;
         this.bigkindsArticleService = bigkindsArticleService;
         this.articleMapper = articleMapper;
         this.articleCntRepository = articleCntRepository;
-        this.logRepository = logRepository;
-        this.logMapper = logMapper;
-        this.searchResultsProducer = searchResultsProducer;
     }
 
     public void articleSearch (CompanySearchParam searchParam) throws JsonProcessingException {
@@ -60,6 +54,7 @@ public class ArticleService {
                                    (existing, replacement) -> existing
                            )).values());
 
+            int count = 0;
             for (Article article : combinedList) {
                 ArticleCnt existingArticleCnt = articleCntList.stream()
                                .filter(articleCnt -> articleCnt.getArticleYMD().isEqual(article.getPublishDatetime()))
@@ -71,20 +66,24 @@ public class ArticleService {
                     if (!isDuplicateArticleCnt(article.getIdSeq(), article.getPublishDatetime())) {
                         ArticleCnt articleCnt = articleMapper.searchArticleCnt(article, searchParam);
                         articleCntList.add(articleCnt);
+                        count += 1;
                         // 수집한 목록에는 신규 날짜지만 기존 DB에 이미 기사가 발행 된 이력이 있을 경우 기존 데이터 cnt 컬럼에 카운트 +1
                     } else {
                         ArticleCnt articleCnt = articleCntRepository.findByIdSeqAndArticleYMD(article.getIdSeq(), article.getPublishDatetime());
                         articleCnt.setArticleCnt(articleCnt.getArticleCnt() + 1);
                         articleCntRepository.save(articleCnt);
+                        count += 1;
                     }
                     // 같은 날짜에 발행된 다른 기사라면 cnt 컬럼에 +1
                 } else {
                     existingArticleCnt.setArticleCnt(existingArticleCnt.getArticleCnt() + 1);
+                    count += 1;
                 }
+
             }
 
             Collections.sort(articleCntList);
-            log.info("전체 {}건 수집되었습니다.", articleCntList.size());
+            log.info("전체 {}건 수집되었습니다.", count);
 
             // searchResultsProducer.sendSearchResults(combinedList);
             // searchResultsProducer.sendArticleCntResult(articleCntList);
@@ -103,6 +102,5 @@ public class ArticleService {
     private boolean isDuplicateArticleCnt(Integer idSeq, LocalDate articleYMD) {
         return articleCntRepository.existsByIdSeqAndArticleYMD(idSeq, articleYMD);
     }
-
 
 }
