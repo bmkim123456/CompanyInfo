@@ -14,13 +14,12 @@ import java.util.List;
 public interface IdentifiedRepository extends JpaRepository<Identified, Integer> {
 
     @Query("SELECT i FROM Identified i " +
-            "LEFT JOIN WooriBase w ON i.idSeq = w.idSeq " +
             "LEFT JOIN CompanyInfo u ON i.idSeq = u.idSeq " +
-            "WHERE w.idSeq IS NOT NULL " +
-            "AND COALESCE(u.corporateStatus, '살아있는 등기') IN ('회생절차', '살아있는 등기', '보전관리') " +
-            "AND u.terminationDate IS NULL " +
+            "WHERE u.terminationDate IS NULL " +
             "AND i.ceoName IS NOT NULL " +
+            "AND COALESCE(u.corporateStatus, '살아있는 등기') IN ('회생절차', '살아있는 등기', '보전관리') " +
             "ORDER BY i.idSeq")
     Page<Identified> findMatchingCompanies(Pageable pageable);
+
 
 }

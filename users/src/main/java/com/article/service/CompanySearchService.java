@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -36,28 +37,33 @@ public class CompanySearchService {
     // 회사 정보를 가져오는 로직
     public String processUsersSequentially() {
 
-        Pageable pageable = PageRequest.of(0, 60000);
+        Pageable pageable = PageRequest.of(3, 100000);
         Page<Identified> identifiedList = identifiedRepository.findMatchingCompanies(pageable);
 
         StringBuilder resultBuilder = new StringBuilder();
 
+        int pageIndex = 301622;
         for (Identified identified : identifiedList) {
             try {
                 JSONObject jsonObject = companyInfoMapper.companyInfoToJson(identified);
+                jsonObject.put("pageIndex", pageIndex);
                 String jsonResult = jsonObject.toString();
                 System.out.println("Sending JSON: " + jsonResult);
+
+                pageIndex++;
 
                 // 큐로 기업정보 전달
                 rabbitTemplate.convertAndSend("hubble.article.queue", jsonResult);
                 resultBuilder.append(jsonResult).append("\n");
 
-                // api로 기업정보 전달
-                /*String postUrl = "http://localhost:8085/api/article/search";
+                /*// api로 기업정보 전달
+                String postUrl = "http://localhost:8085/api/article/article";
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
                 HttpEntity<String> requestEntity = new HttpEntity<>(jsonResult, headers);
 
+                RestTemplate restTemplate = new RestTemplate();
                 ResponseEntity<String> responseEntity = restTemplate.exchange(
                         postUrl,
                         HttpMethod.POST,
