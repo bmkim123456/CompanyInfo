@@ -52,9 +52,9 @@ public class CompanySearchService {
 
                 pageIndex++;
 
-                /*// 큐로 기업정보 전달
+                // 큐로 기업정보 전달
                 rabbitTemplate.convertAndSend("hubble.article.queue", jsonResult);
-                resultBuilder.append(jsonResult).append("\n");*/
+                resultBuilder.append(jsonResult).append("\n");
 
                 /*// api로 기업정보 전달
                 String postUrl = "http://localhost:8085/api/article/article";
