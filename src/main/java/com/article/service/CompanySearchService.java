@@ -37,12 +37,12 @@ public class CompanySearchService {
     // 회사 정보를 가져오는 로직
     public String processUsersSequentially() {
 
-        Pageable pageable = PageRequest.of(3, 100000);
+        Pageable pageable = PageRequest.of(1, 357200);
         Page<Identified> identifiedList = identifiedRepository.findMatchingCompanies(pageable);
 
         StringBuilder resultBuilder = new StringBuilder();
 
-        int pageIndex = 301622;
+        int pageIndex = 358824;
         for (Identified identified : identifiedList) {
             try {
                 JSONObject jsonObject = companyInfoMapper.companyInfoToJson(identified);
