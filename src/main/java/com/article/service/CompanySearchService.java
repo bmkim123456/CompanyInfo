@@ -42,7 +42,7 @@ public class CompanySearchService {
 
         StringBuilder resultBuilder = new StringBuilder();
 
-        int pageIndex = 845635;
+        int pageIndex = 845636;
         for (Identified identified : identifiedList) {
             try {
                 JSONObject jsonObject = companyInfoMapper.companyInfoToJson(identified);
