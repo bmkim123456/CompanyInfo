@@ -37,12 +37,12 @@ public class CompanySearchService {
     // 회사 정보를 가져오는 로직
     public String processUsersSequentially() {
 
-        Pageable pageable = PageRequest.of(1, 422006);
+        Pageable pageable = PageRequest.of(1, 844012);
         Page<Identified> identifiedList = identifiedRepository.findMatchingCompanies(pageable);
 
         StringBuilder resultBuilder = new StringBuilder();
 
-        int pageIndex = 423630;
+        int pageIndex = 845635;
         for (Identified identified : identifiedList) {
             try {
                 JSONObject jsonObject = companyInfoMapper.companyInfoToJson(identified);
@@ -52,9 +52,9 @@ public class CompanySearchService {
 
                 pageIndex++;
 
-                // 큐로 기업정보 전달
+                /*// 큐로 기업정보 전달
                 rabbitTemplate.convertAndSend("hubble.article.queue", jsonResult);
-                resultBuilder.append(jsonResult).append("\n");
+                resultBuilder.append(jsonResult).append("\n");*/
 
                 /*// api로 기업정보 전달
                 String postUrl = "http://localhost:8085/api/article/article";
