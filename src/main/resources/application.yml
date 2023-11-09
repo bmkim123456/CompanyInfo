@@ -15,7 +15,8 @@ spring:
       ddl-auto: update
 
   rabbitmq:
-    host: 192.168.0.173
+    # 로컬 환경일 경우 host: 192.168.0.173
+    host: antock.iptime.org
     port: 5672
     username: admin
     password: "@1026Antock@"
