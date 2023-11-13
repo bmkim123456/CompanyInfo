@@ -34,7 +34,7 @@ public class CompanySearchService {
         this.identifiedRepository = identifiedRepository;
     }
 
-    // 회사 정보를 가져오는 로직
+    // 회사 정보와 관련된 모든 기사내용을 수집할 때 사용할 로직
     public String processUsersSequentially() {
 
         Pageable pageable = PageRequest.of(1, 844012);
@@ -54,6 +54,38 @@ public class CompanySearchService {
 
                 // 큐로 기업정보 전달
                 rabbitTemplate.convertAndSend("hubble.article.queue", jsonResult);
+                resultBuilder.append(jsonResult).append("\n");
+
+                TimeUnit.MILLISECONDS.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return "Error";
+            }
+        }
+
+        return resultBuilder.toString();
+    }
+
+    // 회사에서 발행된 기사가 있는지 없는지 여부를 체크할 경우 실행할 로직 (전수조사 x)
+    public String processUsersSequentiallyCnt() {
+
+        Pageable pageable = PageRequest.of(1, 844012);
+        Page<Identified> identifiedList = identifiedRepository.findMatchingCompanies(pageable);
+
+        StringBuilder resultBuilder = new StringBuilder();
+
+        int pageIndex = 845636;
+        for (Identified identified : identifiedList) {
+            try {
+                JSONObject jsonObject = companyInfoMapper.companyInfoToJson(identified);
+                jsonObject.put("pageIndex", pageIndex);
+                String jsonResult = jsonObject.toString();
+                System.out.println("Sending JSON: " + jsonResult);
+
+                pageIndex++;
+
+                // 큐로 기업정보 전달
+                rabbitTemplate.convertAndSend("hubble.articlecnt.queue", jsonResult);
                 resultBuilder.append(jsonResult).append("\n");
 
                 /*// api로 기업정보 전달
@@ -80,5 +112,7 @@ public class CompanySearchService {
 
         return resultBuilder.toString();
     }
+
+
 
 }
