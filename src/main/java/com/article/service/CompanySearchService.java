@@ -7,6 +7,7 @@ import com.article.mapper.CompanyInfoMapper;
 import com.article.repository.CompanyInfoRepository;
 import com.article.repository.IdentifiedRepository;
 import com.article.repository.TmpExportRepository;
+import com.article.util.EncryptionUtil;
 import org.json.JSONObject;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
@@ -29,19 +30,21 @@ public class CompanySearchService {
     private final CompanyInfoMapper companyInfoMapper;
     private final IdentifiedRepository identifiedRepository;
     private final TmpExportRepository tmpExportRepository;
+    private final EncryptionUtil encryptionUtil;
 
-    public CompanySearchService(CompanyInfoRepository companyInfoRepository, RabbitTemplate rabbitTemplate, CompanyInfoMapper companyInfoMapper, IdentifiedRepository identifiedRepository, TmpExportRepository tmpExportRepository) {
+    public CompanySearchService(CompanyInfoRepository companyInfoRepository, RabbitTemplate rabbitTemplate, CompanyInfoMapper companyInfoMapper, IdentifiedRepository identifiedRepository, TmpExportRepository tmpExportRepository, EncryptionUtil encryptionUtil) {
         this.companyInfoRepository = companyInfoRepository;
         this.rabbitTemplate = rabbitTemplate;
         this.companyInfoMapper = companyInfoMapper;
         this.identifiedRepository = identifiedRepository;
         this.tmpExportRepository = tmpExportRepository;
+        this.encryptionUtil = encryptionUtil;
     }
 
     // 회사 정보와 관련된 모든 기사내용을 수집할 때 사용할 로직
     public String processUsersSequentially() {
 
-        Pageable pageable = PageRequest.of(0, 3000);
+        Pageable pageable = PageRequest.of(0, 5);
         Page<TmpExport> identifiedList = tmpExportRepository.findMatchingCompanies(pageable);
         StringBuilder resultBuilder = new StringBuilder();
 
@@ -52,11 +55,13 @@ public class CompanySearchService {
                 String jsonResult = jsonObject.toString();
                 System.out.println("Sending JSON: " + jsonResult);
 
+                String encryption = encryptionUtil.encrypt(jsonResult);
+
                 pageIndex++;
 
                 // 큐로 기업정보 전달
-                rabbitTemplate.convertAndSend("hubble.article.queue", jsonResult);
-                resultBuilder.append(jsonResult).append("\n");
+                rabbitTemplate.convertAndSend("hubble.article.queue", encryption);
+                resultBuilder.append(encryption).append("\n");
 
                 TimeUnit.MILLISECONDS.sleep(500);
             } catch (InterruptedException e) {
