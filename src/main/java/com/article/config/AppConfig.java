@@ -2,6 +2,7 @@ package com.article.config;
 
 import com.article.entity.CompanyInfo;
 import com.article.entity.Identified;
+import com.article.entity.TmpExport;
 import com.article.mapper.CompanyInfoMapper;
 import org.json.JSONObject;
 import org.springframework.context.annotation.Bean;
@@ -23,6 +24,13 @@ public class AppConfig {
             public JSONObject companyInfoToJson(Identified identified) {
                 return CompanyInfoMapper.super.companyInfoToJson(identified);
             }
+
+            @Override
+            public JSONObject companyInfoToJsonExport (TmpExport tmpExport) {
+                return CompanyInfoMapper.super.companyInfoToJsonExport(tmpExport);
+            }
         };
     }
+
+
 }

@@ -2,9 +2,11 @@ package com.article.service;
 
 import com.article.entity.CompanyInfo;
 import com.article.entity.Identified;
+import com.article.entity.TmpExport;
 import com.article.mapper.CompanyInfoMapper;
 import com.article.repository.CompanyInfoRepository;
 import com.article.repository.IdentifiedRepository;
+import com.article.repository.TmpExportRepository;
 import org.json.JSONObject;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
@@ -26,27 +28,27 @@ public class CompanySearchService {
     private final RabbitTemplate rabbitTemplate;
     private final CompanyInfoMapper companyInfoMapper;
     private final IdentifiedRepository identifiedRepository;
+    private final TmpExportRepository tmpExportRepository;
 
-    public CompanySearchService(CompanyInfoRepository companyInfoRepository, RabbitTemplate rabbitTemplate, CompanyInfoMapper companyInfoMapper, IdentifiedRepository identifiedRepository) {
+    public CompanySearchService(CompanyInfoRepository companyInfoRepository, RabbitTemplate rabbitTemplate, CompanyInfoMapper companyInfoMapper, IdentifiedRepository identifiedRepository, TmpExportRepository tmpExportRepository) {
         this.companyInfoRepository = companyInfoRepository;
         this.rabbitTemplate = rabbitTemplate;
         this.companyInfoMapper = companyInfoMapper;
         this.identifiedRepository = identifiedRepository;
+        this.tmpExportRepository = tmpExportRepository;
     }
 
     // 회사 정보와 관련된 모든 기사내용을 수집할 때 사용할 로직
     public String processUsersSequentially() {
 
-        Pageable pageable = PageRequest.of(1, 844012);
-        Page<Identified> identifiedList = identifiedRepository.findMatchingCompanies(pageable);
-
+        Pageable pageable = PageRequest.of(0, 3000);
+        Page<TmpExport> identifiedList = tmpExportRepository.findMatchingCompanies(pageable);
         StringBuilder resultBuilder = new StringBuilder();
 
-        int pageIndex = 845636;
-        for (Identified identified : identifiedList) {
+        int pageIndex = 1;
+        for (TmpExport tmpExport : identifiedList) {
             try {
-                JSONObject jsonObject = companyInfoMapper.companyInfoToJson(identified);
-                jsonObject.put("pageIndex", pageIndex);
+                JSONObject jsonObject = companyInfoMapper.companyInfoToJsonExport(tmpExport);
                 String jsonResult = jsonObject.toString();
                 System.out.println("Sending JSON: " + jsonResult);
 
