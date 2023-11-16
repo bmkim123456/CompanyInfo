@@ -26,6 +26,14 @@ public class CompanyInfoController {
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/search_cnt")
+    public ResponseEntity<String> processUsersCnt() {
+
+        String result = searchService.processUsersSequentiallyCnt();
+
+        return ResponseEntity.ok(result);
+    }
+
 
     // 뉴스 함께 검색
     /*@PostMapping("/search")
