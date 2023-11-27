@@ -122,7 +122,7 @@ public class CompanySearchService {
 
     public String sendYoutubeSearch() {
 
-        Pageable pageable = PageRequest.of(0, 1000);
+        Pageable pageable = PageRequest.of(0, 1100000);
         Page<Identified> identifiedList = identifiedRepository.findMatchingCompanies(pageable);
         StringBuilder resultBuilder = new StringBuilder();
 
