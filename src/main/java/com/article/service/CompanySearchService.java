@@ -41,10 +41,10 @@ public class CompanySearchService {
         this.encryptionUtil = encryptionUtil;
     }
 
-    // 회사 정보와 관련된 모든 기사내용을 수집할 때 사용할 로직
+    /** 회사 정보와 관련된 모든 기사내용을 수집할 때 사용할 로직 */
     public String processUsersSequentially() {
 
-        Pageable pageable = PageRequest.of(0, 5);
+        Pageable pageable = PageRequest.of(0, 1000);
         Page<TmpExport> identifiedList = tmpExportRepository.findMatchingCompanies(pageable);
         StringBuilder resultBuilder = new StringBuilder();
 
@@ -59,7 +59,7 @@ public class CompanySearchService {
 
                 pageIndex++;
 
-                // 큐로 기업정보 전달
+                /** 큐로 기업정보 전달 */
                 rabbitTemplate.convertAndSend("hubble.article.queue", encryption);
                 resultBuilder.append(encryption).append("\n");
 
@@ -73,7 +73,7 @@ public class CompanySearchService {
         return resultBuilder.toString();
     }
 
-    // 회사에서 발행된 기사가 있는지 없는지 여부를 체크할 경우 실행할 로직 (전수조사 x)
+    /** 회사에서 발행된 기사가 있는지 없는지 여부를 체크할 경우 실행할 로직 (전수조사 x) */
     public String processUsersSequentiallyCnt() {
 
         Pageable pageable = PageRequest.of(1, 844012);
@@ -109,6 +109,37 @@ public class CompanySearchService {
                         requestEntity,
                         String.class
                 );*/
+
+                TimeUnit.MILLISECONDS.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return "Error";
+            }
+        }
+
+        return resultBuilder.toString();
+    }
+
+    public String sendYoutubeSearch() {
+
+        Pageable pageable = PageRequest.of(0, 1000);
+        Page<Identified> identifiedList = identifiedRepository.findMatchingCompanies(pageable);
+        StringBuilder resultBuilder = new StringBuilder();
+
+        int pageIndex = 1;
+        for (Identified identified : identifiedList) {
+            try {
+                JSONObject jsonObject = companyInfoMapper.companyInfoToJson(identified);
+                String jsonResult = jsonObject.toString();
+                System.out.println("Sending JSON: " + jsonResult);
+
+                String encryption = encryptionUtil.encrypt(jsonResult);
+
+                pageIndex++;
+
+                /** 큐로 기업정보 전달 */
+                rabbitTemplate.convertAndSend("hubble.youtube.queue", encryption);
+                resultBuilder.append(encryption).append("\n");
 
                 TimeUnit.MILLISECONDS.sleep(500);
             } catch (InterruptedException e) {

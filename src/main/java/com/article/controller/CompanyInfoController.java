@@ -34,6 +34,12 @@ public class CompanyInfoController {
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/youtube")
+    public ResponseEntity<String> sendYoutubeSearch() {
+        String result = searchService.sendYoutubeSearch();
+        return ResponseEntity.ok(result);
+    }
+
 
     // 뉴스 함께 검색
     /*@PostMapping("/search")

@@ -11,7 +11,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TmpExportRepository extends JpaRepository<TmpExport, Integer> {
 
-    @Query("SELECT i FROM TmpExport i " +
-            "ORDER BY i.idSeq")
+    @Query("SELECT d1 " +
+            "FROM TmpExport d1 " +
+            "LEFT JOIN CompanyInfo d2 ON d2.idSeq = d1.idSeq " +
+            "WHERE d2.terminationDate IS NULL " +
+            "ORDER BY d1.idSeq")
     Page<TmpExport> findMatchingCompanies(Pageable pageable);
 }

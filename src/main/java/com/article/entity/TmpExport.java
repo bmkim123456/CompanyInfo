@@ -12,7 +12,7 @@ import javax.persistence.Table;
 @Entity
 @Getter
 @Setter
-@Table(name = "tmp_export", schema = "identified")
+@Table(name = "tmp_invest", schema = "identified")
 public class TmpExport {
 
     @Id
@@ -24,4 +24,5 @@ public class TmpExport {
 
     @Column(name = "ceo_name")
     private String ceoName;
+
 }
