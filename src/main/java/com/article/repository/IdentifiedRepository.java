@@ -22,4 +22,6 @@ public interface IdentifiedRepository extends JpaRepository<Identified, Integer>
     Page<Identified> findMatchingCompanies(Pageable pageable);
 
 
+
+
 }

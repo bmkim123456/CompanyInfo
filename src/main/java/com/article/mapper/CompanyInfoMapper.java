@@ -17,12 +17,12 @@ public interface CompanyInfoMapper {
 
     }
 
-    default JSONObject companyInfoToJsonExport (TmpExport tmpExport) {
+    default JSONObject companyInfoToJsonExport (CompanyInfo companyInfo) {
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("id_seq", tmpExport.getIdSeq());
-        jsonObject.put("companyName", tmpExport.getCompanyName());
-        jsonObject.put("ceoName", tmpExport.getCeoName());
+        jsonObject.put("id_seq", companyInfo.getIdSeq());
+        jsonObject.put("companyName", companyInfo.getCompanyName());
+        jsonObject.put("ceoName", companyInfo.getCeoName());
         return jsonObject;
 
     }

@@ -32,8 +32,8 @@ public class AppConfig {
             }
 
             @Override
-            public JSONObject companyInfoToJsonExport (TmpExport tmpExport) {
-                return CompanyInfoMapper.super.companyInfoToJsonExport(tmpExport);
+            public JSONObject companyInfoToJsonExport (CompanyInfo companyInfo) {
+                return CompanyInfoMapper.super.companyInfoToJsonExport(companyInfo);
             }
         };
     }

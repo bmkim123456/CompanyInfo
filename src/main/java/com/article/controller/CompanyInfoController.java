@@ -21,24 +21,11 @@ public class CompanyInfoController {
     @PostMapping("/search")
     public ResponseEntity<String> processUsers() {
 
-        String result = searchService.processUsersSequentially();
+        String result = searchService.sendCompanyToRabbitMQ();
 
         return ResponseEntity.ok(result);
     }
 
-    @PostMapping("/search_cnt")
-    public ResponseEntity<String> processUsersCnt() {
-
-        String result = searchService.processUsersSequentiallyCnt();
-
-        return ResponseEntity.ok(result);
-    }
-
-    @PostMapping("/youtube")
-    public ResponseEntity<String> sendYoutubeSearch() {
-        String result = searchService.sendYoutubeSearch();
-        return ResponseEntity.ok(result);
-    }
 
 
     // 뉴스 함께 검색

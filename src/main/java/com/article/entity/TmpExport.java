@@ -12,7 +12,7 @@ import javax.persistence.Table;
 @Entity
 @Getter
 @Setter
-@Table(name = "tmp_invest", schema = "identified")
+@Table(name = "kt_report_231129", schema = "kt")
 public class TmpExport {
 
     @Id
