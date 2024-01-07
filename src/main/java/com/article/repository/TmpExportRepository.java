@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TmpExportRepository extends JpaRepository<TmpExport, Integer> {
 
-    @Query("SELECT i FROM TmpExport i " +
+    /*@Query("SELECT i FROM TmpExport i " +
             "ORDER BY i.idSeq")
-    Page<TmpExport> findMatchingCompanies(Pageable pageable);
+    Page<TmpExport> findMatchingCompanies(Pageable pageable);*/
 }

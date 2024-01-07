@@ -18,13 +18,13 @@ public class CompanyInfoController {
     }
 
     // 회사 정보 조회
-    @PostMapping("/search")
+    /*@PostMapping("/search")
     public ResponseEntity<String> processUsers() {
 
         String result = searchService.processUsersSequentially();
 
         return ResponseEntity.ok(result);
-    }
+    }*/
 
     @PostMapping("/search_cnt")
     public ResponseEntity<String> processUsersCnt() {

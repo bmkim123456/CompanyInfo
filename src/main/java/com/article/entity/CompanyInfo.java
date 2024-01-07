@@ -21,10 +21,4 @@ public class CompanyInfo {
 
     @Column(name = "ceo_name")
     private String ceoName;
-
-    @Column(name = "corporate_status")
-    private String corporateStatus;
-
-    @Column(name = "termination_date")
-    private LocalDate terminationDate;
 }

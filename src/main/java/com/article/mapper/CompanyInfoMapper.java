@@ -7,12 +7,12 @@ import org.json.JSONObject;
 
 public interface CompanyInfoMapper {
 
-    default JSONObject companyInfoToJson (Identified identified) {
+    default JSONObject companyInfoToJson (CompanyInfo companyInfo) {
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("id_seq", identified.getIdSeq());
-        jsonObject.put("companyName", identified.getCompanyName());
-        jsonObject.put("ceoName", identified.getCeoName());
+        jsonObject.put("id_seq", companyInfo.getIdSeq());
+        jsonObject.put("companyName", companyInfo.getCompanyName());
+        jsonObject.put("ceoName", companyInfo.getCeoName());
         return jsonObject;
 
     }

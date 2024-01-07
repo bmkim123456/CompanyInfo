@@ -27,8 +27,8 @@ public class AppConfig {
     public CompanyInfoMapper companyInfoMapper() {
         return new CompanyInfoMapper() {
             @Override
-            public JSONObject companyInfoToJson(Identified identified) {
-                return CompanyInfoMapper.super.companyInfoToJson(identified);
+            public JSONObject companyInfoToJson(CompanyInfo companyInfo) {
+                return CompanyInfoMapper.super.companyInfoToJson(companyInfo);
             }
 
             @Override

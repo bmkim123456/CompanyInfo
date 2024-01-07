@@ -42,7 +42,7 @@ public class CompanySearchService {
     }
 
     // 회사 정보와 관련된 모든 기사내용을 수집할 때 사용할 로직
-    public String processUsersSequentially() {
+    /*public String processUsersSequentially() {
 
         Pageable pageable = PageRequest.of(0, 5);
         Page<TmpExport> identifiedList = tmpExportRepository.findMatchingCompanies(pageable);
@@ -71,18 +71,18 @@ public class CompanySearchService {
         }
 
         return resultBuilder.toString();
-    }
+    }*/
 
     // 회사에서 발행된 기사가 있는지 없는지 여부를 체크할 경우 실행할 로직 (전수조사 x)
     public String processUsersSequentiallyCnt() {
 
-        Pageable pageable = PageRequest.of(1, 844012);
-        Page<Identified> identifiedList = identifiedRepository.findMatchingCompanies(pageable);
+        Pageable pageable = PageRequest.of(0, 100);
+        Page<CompanyInfo> identifiedList = companyInfoRepository.findByIdSeq(pageable);
 
         StringBuilder resultBuilder = new StringBuilder();
 
-        int pageIndex = 845636;
-        for (Identified identified : identifiedList) {
+        int pageIndex = 1;
+        for (CompanyInfo identified : identifiedList) {
             try {
                 JSONObject jsonObject = companyInfoMapper.companyInfoToJson(identified);
                 jsonObject.put("pageIndex", pageIndex);
@@ -92,11 +92,11 @@ public class CompanySearchService {
                 pageIndex++;
 
                 // 큐로 기업정보 전달
-                rabbitTemplate.convertAndSend("hubble.articlecnt.queue", jsonResult);
-                resultBuilder.append(jsonResult).append("\n");
+                /*rabbitTemplate.convertAndSend("hubble.articlecnt.queue", jsonResult);
+                resultBuilder.append(jsonResult).append("\n");*/
 
-                /*// api로 기업정보 전달
-                String postUrl = "http://localhost:8085/api/article/article";
+                // api로 기업정보 전달
+                String postUrl = "http://localhost:8083/api/article/article_cnt";
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
@@ -108,7 +108,7 @@ public class CompanySearchService {
                         HttpMethod.POST,
                         requestEntity,
                         String.class
-                );*/
+                );
 
                 TimeUnit.MILLISECONDS.sleep(500);
             } catch (InterruptedException e) {
