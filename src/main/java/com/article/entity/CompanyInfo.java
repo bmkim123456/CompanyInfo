@@ -1,14 +1,15 @@
 package com.article.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDate;
 
 @Entity
 @Getter
-@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "unv_company", schema = "public")
 public class CompanyInfo {
 

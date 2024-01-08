@@ -2,6 +2,7 @@ package com.article.controller;
 
 
 import com.article.service.CompanySearchService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,44 +10,26 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class CompanyInfoController {
 
     private final CompanySearchService searchService;
 
-    public CompanyInfoController(CompanySearchService searchService) {
-        this.searchService = searchService;
-    }
 
-    // 회사 정보 조회
-    /*@PostMapping("/search")
-    public ResponseEntity<String> processUsers() {
+    @PostMapping("/searchUrl")
+    public ResponseEntity<String> companyInfoUrl() {
 
-        String result = searchService.processUsersSequentially();
-
-        return ResponseEntity.ok(result);
-    }*/
-
-    @PostMapping("/search_cnt")
-    public ResponseEntity<String> processUsersCnt() {
-
-        String result = searchService.processUsersSequentiallyCnt();
+        String result = searchService.sendCompanyInfoUrl();
 
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/searchQueue")
+    public ResponseEntity<String> companyInfoQueue() {
 
-    // 뉴스 함께 검색
-    /*@PostMapping("/search")
-    public ResponseEntity<List<NaverNewsItem>> processUsers(@RequestParam(name = "display", required = false, defaultValue = "10") int display) {
-        List<NaverNewsItem> newsItems = testService.processUsersSequentially(display);
+        String result = searchService.sendToCompanyInfoQueue();
 
-        if (!newsItems.isEmpty()) {
-            return ResponseEntity.ok(newsItems);
-        } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
-        }
-    }*/
-
-
+        return ResponseEntity.ok(result);
+    }
 
 }
