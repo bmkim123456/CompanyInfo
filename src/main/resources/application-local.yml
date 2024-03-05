@@ -12,10 +12,10 @@ spring:
       naming:
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-      ddl-auto: update
+      ddl-auto: none
 
   rabbitmq:
-    host: antock.iptime.org
+    host: 192.168.0.173
     port: 5672
     username: admin
     password: "@1026Antock@"

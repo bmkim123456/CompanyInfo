@@ -32,4 +32,10 @@ public class CompanyInfoController {
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/search/article_cnt")
+    public ResponseEntity<String> companyInfoQueueCnt() {
+        String result = searchService.sendToCompanyInfoQueueCnt();
+        return ResponseEntity.ok(result);
+    }
+
 }

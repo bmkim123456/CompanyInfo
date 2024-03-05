@@ -22,4 +22,9 @@ public class CompanyInfo {
 
     @Column(name = "ceo_name")
     private String ceoName;
+
+    @ManyToOne
+    @JoinColumn(name = "id_seq",insertable = false, updatable = false)
+    private ArticleCompany company;
+
 }

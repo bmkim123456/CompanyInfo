@@ -13,10 +13,12 @@ import java.util.Objects;
 @Repository
 public interface CompanyInfoRepository extends JpaRepository<CompanyInfo, Long> {
 
-    @Query(nativeQuery = true, value = "SELECT id_seq, company_name, ceo_name\n" +
-            "FROM unv_company\n" +
-            "ORDER BY id_seq\n" +
-            "LIMIT 1")
+    @Query(value =
+           "SELECT t1 " +
+           "FROM CompanyInfo t1 " +
+           "JOIN FETCH t1.company t2 " +
+           "WHERE t1.idSeq = t2.idSeq " +
+           "ORDER BY t2.idSeq ASC ")
     List<CompanyInfo> findCompany();
 
 
