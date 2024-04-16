@@ -18,29 +18,6 @@ public class CompanyInfoController {
 
     private final CompanySearchService searchService;
 
-
-    @PostMapping("/searchUrl")
-    public ResponseEntity<String> companyInfoUrl(@RequestBody CompanyDto dto) {
-
-        String result = searchService.sendCompanyInfoUrl(dto);
-
-        return ResponseEntity.ok(result);
-    }
-
-    @PostMapping("/searchQueue")
-    public ResponseEntity<String> companyInfoQueue(@RequestBody CompanyDto dto) {
-
-        String result = searchService.sendToCompanyInfoQueue(dto);
-
-        return ResponseEntity.ok(result);
-    }
-
-    @PostMapping("/search/article_cnt")
-    public ResponseEntity<String> companyInfoQueueCnt(@RequestBody CompanyDto dto) {
-        String result = searchService.sendToCompanyInfoQueueCnt(dto);
-        return ResponseEntity.ok(result);
-    }
-
     @PostMapping(value = "/file", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<String> uploadFile (@RequestPart CompanyDto dto,
                                               @RequestPart MultipartFile file) throws IOException {
