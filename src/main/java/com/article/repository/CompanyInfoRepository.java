@@ -10,11 +10,15 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 @Repository
 public interface CompanyInfoRepository extends JpaRepository<CompanyInfo, Long> {
 
     @Query("SELECT t1 FROM CompanyInfo t1 WHERE t1.idSeq = :idSeq")
     CompanyInfo getCompanyInfo (@Param("idSeq") Long id);
+
+    @Query("SELECT t1 FROM CompanyInfo t1")
+    Stream<CompanyInfo> getCompanyInfos();
 
 }

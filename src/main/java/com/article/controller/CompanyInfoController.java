@@ -25,4 +25,10 @@ public class CompanyInfoController {
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/company")
+    public ResponseEntity<String> findCompany () {
+        String result = searchService.sendCompanyInfoQueue();
+        return ResponseEntity.ok(result);
+    }
+
 }

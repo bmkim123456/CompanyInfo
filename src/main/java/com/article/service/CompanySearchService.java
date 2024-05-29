@@ -10,8 +10,8 @@ import org.json.JSONObject;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
@@ -20,8 +20,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -32,7 +32,67 @@ public class CompanySearchService {
     private final RabbitTemplate rabbitTemplate;
     private final EncryptionUtil encryptionUtil;
 
-    public List<JSONObject> convertFileToJsonObject (CompanyDto dto, MultipartFile file) throws IOException {
+    public String sendFileToCompanyInfoQueue (CompanyDto dto, MultipartFile file) throws IOException {
+
+        List<JSONObject> jsonObjects = convertFileToJsonObject(dto, file);
+        StringBuilder resultBuilder = new StringBuilder();
+
+        for (JSONObject obj : jsonObjects) {
+            try {
+                String jsonResult = obj.toString();
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+
+                String encrypt = encryptionUtil.encrypt(jsonResult);
+
+                rabbitTemplate.convertAndSend("ibk.article", encrypt);
+
+                resultBuilder.append(jsonResult).append("\n");
+
+                TimeUnit.MILLISECONDS.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return "Error";
+            }
+        }
+        return resultBuilder.toString();
+    }
+
+    @Transactional
+    public String sendCompanyInfoQueue () {
+
+        List<JSONObject> jsonObjects = convertCompanyInfo();
+        StringBuilder resultBuilder = new StringBuilder();
+
+        int count = 0;
+        for (JSONObject obj : jsonObjects) {
+            try {
+                String jsonResult = obj.toString();
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+
+                String encrypt = encryptionUtil.encrypt(jsonResult);
+
+                rabbitTemplate.convertAndSend("company.article", encrypt);
+
+                resultBuilder.append(jsonResult).append("\n");
+
+                System.out.println(obj);
+                count++;
+
+                TimeUnit.MILLISECONDS.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return "Error";
+            }
+        }
+        System.out.println("조회된 전체 기업 수 : " + count);
+        return resultBuilder.toString();
+    }
+
+
+
+    private List<JSONObject> convertFileToJsonObject (CompanyDto dto, MultipartFile file) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
         List<CompanyInfo> companyInfoList = new ArrayList<>();
         String line;
@@ -62,29 +122,22 @@ public class CompanySearchService {
         return jsonObjects;
     }
 
-    public String sendFileToCompanyInfoQueue (CompanyDto dto, MultipartFile file) throws IOException {
+    @Transactional
+    public List<JSONObject> convertCompanyInfo () {
 
-        List<JSONObject> jsonObjects = convertFileToJsonObject(dto, file);
-        StringBuilder resultBuilder = new StringBuilder();
+        List<CompanyInfo> companyInfoList = companyInfoRepository.getCompanyInfos().collect(Collectors.toList());
 
-        for (JSONObject obj : jsonObjects) {
-            try {
-                String jsonResult = obj.toString();
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON);
+        List<JSONObject> jsonObjects = new ArrayList<>();
 
-                String encrypt = encryptionUtil.encrypt(jsonResult);
-
-                rabbitTemplate.convertAndSend("ibk.article", encrypt);
-
-                resultBuilder.append(jsonResult).append("\n");
-
-                TimeUnit.MILLISECONDS.sleep(100);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return "Error";
-            }
+        for (CompanyInfo companyInfo : companyInfoList) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("idSeq", companyInfo.getIdSeq());
+            jsonObject.put("companyName", companyInfo.getCompanyName());
+            if (companyInfo.getCeoName() == null) {
+                jsonObject.put("ceoName", "");
+            } else jsonObject.put("ceoName", companyInfo.getCeoName());
+            jsonObjects.add(jsonObject);
         }
-        return resultBuilder.toString();
+        return jsonObjects;
     }
 }
