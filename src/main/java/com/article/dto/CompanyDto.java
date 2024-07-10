@@ -15,4 +15,6 @@ public class CompanyDto {
     private String queue;
     private MultipartFile file;
     private String requestDate;
+    private String type;
+    private String range;
 }

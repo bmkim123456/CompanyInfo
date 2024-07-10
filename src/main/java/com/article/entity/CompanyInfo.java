@@ -4,10 +4,10 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Getter
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "unv_company", schema = "public")
@@ -22,5 +22,6 @@ public class CompanyInfo {
 
     @Column(name = "ceo_name")
     private String ceoName;
+
 
 }

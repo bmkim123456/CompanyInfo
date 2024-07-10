@@ -1,7 +1,9 @@
 package com.article.service;
 
 import com.article.dto.CompanyDto;
+import com.article.entity.AttentionCompany;
 import com.article.entity.CompanyInfo;
+import com.article.repository.AttentionCompanyRepository;
 import com.article.repository.CompanyInfoRepository;
 import com.article.util.EncryptionUtil;
 import lombok.RequiredArgsConstructor;
@@ -29,10 +31,11 @@ import java.util.stream.Collectors;
 public class CompanySearchService {
 
     private final CompanyInfoRepository companyInfoRepository;
+    private final AttentionCompanyRepository attentionCompanyRepository;
     private final RabbitTemplate rabbitTemplate;
     private final EncryptionUtil encryptionUtil;
 
-    public String sendFileToCompanyInfoQueue (CompanyDto dto, MultipartFile file) throws IOException {
+    public void sendFileToCompanyInfoQueue (CompanyDto dto, MultipartFile file) throws IOException {
 
         List<JSONObject> jsonObjects = convertFileToJsonObject(dto, file);
         StringBuilder resultBuilder = new StringBuilder();
@@ -52,16 +55,21 @@ public class CompanySearchService {
                 TimeUnit.MILLISECONDS.sleep(100);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                return "Error";
             }
         }
-        return resultBuilder.toString();
     }
 
     @Transactional
-    public String sendCompanyInfoQueue () {
+    public void sendCompanyInfo(String type, String range) {
 
-        List<JSONObject> jsonObjects = convertCompanyInfo();
+        List<JSONObject> jsonObjects = new ArrayList<>();
+
+        if (range.equals("전체")) {
+            jsonObjects = convertCompanyInfo(type);
+        } else if (range.equals("일부")) {
+            jsonObjects = convertAttentionCompany(type);
+        }
+
         StringBuilder resultBuilder = new StringBuilder();
 
         int count = 0;
@@ -73,7 +81,13 @@ public class CompanySearchService {
 
                 String encrypt = encryptionUtil.encrypt(jsonResult);
 
-                rabbitTemplate.convertAndSend("company.article", encrypt);
+                if (type.equals("전체수집")) {
+                    rabbitTemplate.convertAndSend("company.article", encrypt);
+                } else if (type.equals("기사개수")) {
+                    rabbitTemplate.convertAndSend("company.article.cnt", encrypt);
+                } else if (type.equals("키워드")) {
+                    rabbitTemplate.convertAndSend("company.article.keyword", encrypt);
+                }
 
                 resultBuilder.append(jsonResult).append("\n");
 
@@ -83,11 +97,9 @@ public class CompanySearchService {
                 TimeUnit.MILLISECONDS.sleep(100);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                return "Error";
             }
         }
         System.out.println("조회된 전체 기업 수 : " + count);
-        return resultBuilder.toString();
     }
 
 
@@ -117,15 +129,16 @@ public class CompanySearchService {
             } else jsonObject.put("ceoName", companyInfo.getCeoName());
             jsonObject.put("keyword", dto.getKeyword());
             jsonObject.put("requestDate", dto.getRequestDate());
+            jsonObject.put("type", dto.getType());
             jsonObjects.add(jsonObject);
         }
         return jsonObjects;
     }
 
     @Transactional
-    public List<JSONObject> convertCompanyInfo () {
+    public List<JSONObject> convertCompanyInfo (String type) {
 
-        List<CompanyInfo> companyInfoList = companyInfoRepository.getCompanyInfos().collect(Collectors.toList());
+        List<CompanyInfo> companyInfoList = companyInfoRepository.getCompanyInfos().limit(30).collect(Collectors.toList());
 
         List<JSONObject> jsonObjects = new ArrayList<>();
 
@@ -133,9 +146,29 @@ public class CompanySearchService {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("idSeq", companyInfo.getIdSeq());
             jsonObject.put("companyName", companyInfo.getCompanyName());
-            if (companyInfo.getCeoName() == null) {
+            if (ObjectUtils.isEmpty(companyInfo.getCeoName())) {
                 jsonObject.put("ceoName", "");
             } else jsonObject.put("ceoName", companyInfo.getCeoName());
+            jsonObject.put("type", type);
+            jsonObjects.add(jsonObject);
+        }
+        return jsonObjects;
+    }
+
+    @Transactional
+    public List<JSONObject> convertAttentionCompany (String type) {
+
+        List<AttentionCompany> attentionCompanyList = attentionCompanyRepository.getCompanyInfo().limit(30).collect(Collectors.toList());
+        List<JSONObject> jsonObjects = new ArrayList<>();
+
+        for (AttentionCompany attentionCompany : attentionCompanyList) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("idSeq", attentionCompany.getCompanyInfo().getIdSeq());
+            jsonObject.put("companyName", attentionCompany.getCompanyInfo().getCompanyName());
+            if (ObjectUtils.isEmpty(attentionCompany.getCompanyInfo().getCeoName())) {
+                jsonObject.put("ceoName", "");
+            } else jsonObject.put("ceoName", attentionCompany.getCompanyInfo().getCeoName());
+            jsonObject.put("type", type);
             jsonObjects.add(jsonObject);
         }
         return jsonObjects;
