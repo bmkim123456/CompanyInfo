@@ -40,6 +40,7 @@ public class CompanySearchService {
         List<JSONObject> jsonObjects = convertFileToJsonObject(dto, file);
         StringBuilder resultBuilder = new StringBuilder();
 
+        int count = 0;
         for (JSONObject obj : jsonObjects) {
             try {
                 String jsonResult = obj.toString();
@@ -48,15 +49,25 @@ public class CompanySearchService {
 
                 String encrypt = encryptionUtil.encrypt(jsonResult);
 
-                rabbitTemplate.convertAndSend("ibk.article", encrypt);
+                if (dto.getType().equals("전체수집")) {
+                    rabbitTemplate.convertAndSend("company.article", encrypt);
+                } else if (dto.getType().equals("기사개수")) {
+                    rabbitTemplate.convertAndSend("company.article.cnt", encrypt);
+                } else if (dto.getType().equals("키워드")) {
+                    rabbitTemplate.convertAndSend("company.article.keyword", encrypt);
+                }
 
                 resultBuilder.append(jsonResult).append("\n");
+
+                System.out.println(obj);
+                count++;
 
                 TimeUnit.MILLISECONDS.sleep(100);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
+        System.out.println("조회된 전체 기업 수 : " + count);
     }
 
     @Transactional
@@ -138,7 +149,7 @@ public class CompanySearchService {
     @Transactional
     public List<JSONObject> convertCompanyInfo (String type) {
 
-        List<CompanyInfo> companyInfoList = companyInfoRepository.getCompanyInfos().limit(30).collect(Collectors.toList());
+        List<CompanyInfo> companyInfoList = companyInfoRepository.getCompanyInfos().collect(Collectors.toList());
 
         List<JSONObject> jsonObjects = new ArrayList<>();
 
@@ -158,7 +169,7 @@ public class CompanySearchService {
     @Transactional
     public List<JSONObject> convertAttentionCompany (String type) {
 
-        List<AttentionCompany> attentionCompanyList = attentionCompanyRepository.getCompanyInfo().limit(30).collect(Collectors.toList());
+        List<AttentionCompany> attentionCompanyList = attentionCompanyRepository.getCompanyInfo().collect(Collectors.toList());
         List<JSONObject> jsonObjects = new ArrayList<>();
 
         for (AttentionCompany attentionCompany : attentionCompanyList) {

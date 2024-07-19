@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class CompanyDto {
 
     private Long idSeq;
+    private String enr;
     private String companyName;
     private String ceoName;
     private String keyword;

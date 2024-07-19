@@ -40,4 +40,18 @@ public class AttentionCompanyRepositoryTest {
             }
         }
     }
+
+    @Test
+    public void getEnrTest() {
+        try (Stream<String> companyEnr = companyInfoRepository.getCompanyEnr()) {
+            assertThat(companyEnr).isNotNull();
+
+            List<String> enrList = companyEnr.limit(10).collect(Collectors.toList());
+            assertThat(enrList).isNotNull();
+
+            for (String enr : enrList) {
+                System.out.println(enr);
+            }
+        }
+    }
 }

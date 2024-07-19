@@ -23,5 +23,7 @@ public class CompanyInfo {
     @Column(name = "ceo_name")
     private String ceoName;
 
+    @Column(name = "enr")
+    private String enr;
 
 }
