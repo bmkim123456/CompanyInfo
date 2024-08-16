@@ -55,6 +55,8 @@ public class CompanySearchService {
                     rabbitTemplate.convertAndSend("company.article.cnt", encrypt);
                 } else if (dto.getType().equals("키워드")) {
                     rabbitTemplate.convertAndSend("company.article.keyword", encrypt);
+                } else if (dto.getType().equals("유튜브")) {
+                    rabbitTemplate.convertAndSend("company.youtube", encrypt);
                 }
 
                 resultBuilder.append(jsonResult).append("\n");

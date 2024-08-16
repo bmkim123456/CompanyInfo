@@ -27,7 +27,7 @@ public class CompanyInfoController {
                                               @RequestPart MultipartFile file) throws IOException {
         if (ObjectUtils.isEmpty(dto.getType())) {
             return new ResponseEntity<>("type은 비어있을 수 없습니다", HttpStatus.BAD_REQUEST);
-        } else if (!dto.getType().equals("전체수집") && !dto.getType().equals("키워드") && !dto.getType().equals("기사개수")) {
+        } else if (!dto.getType().equals("전체수집") && !dto.getType().equals("키워드") && !dto.getType().equals("기사개수") && !dto.getType().equals("유튜브")) {
             return new ResponseEntity<>("type은 다음 3가지만 요청만 가능합니다 : 1.전체수집, 2.키워드, 3.기사개수", HttpStatus.BAD_REQUEST);
         } else searchService.sendFileToCompanyInfoQueue(dto, file);
         return ResponseEntity.ok("조회 완료");
