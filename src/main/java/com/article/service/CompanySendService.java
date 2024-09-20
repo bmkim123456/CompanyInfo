@@ -23,7 +23,25 @@ public class CompanySendService {
     private final RestTemplate restTemplate;
 
     @Transactional
-    public void sendEnr (String header) {
+    public void sendEnr (String header, String enr) {
+
+        createHeaders(header).setContentType(MediaType.APPLICATION_JSON);
+        createHeaders(header).setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        Map<String, String> body = Collections.singletonMap("enr", enr);
+        HttpEntity<Map<String, String>> request = new HttpEntity<>(body, createHeaders(header));
+        String url = "http://221.168.32.254:17210/company/detail";
+
+        try {
+            restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+            log.info("Request Enr :  {}" ,enr);
+        } catch (HttpClientErrorException e) {
+            System.err.println("Client error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+        }
+    }
+
+    @Transactional
+    public void sendEnrList (String header) {
 
         List<String> companyInfoList = companyInfoRepository.getCompanyEnr().collect(Collectors.toList());
 
@@ -33,15 +51,13 @@ public class CompanySendService {
                 headers.setContentType(MediaType.APPLICATION_JSON);
                 headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-
-
                 Map<String, String> body = Collections.singletonMap("enr", enr);
                 HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
-                String url = "http://49.247.9.149:9091/company/detail";
+                String url = "https://api.hubble.co.kr/company/detail";
 
                 try {
                     restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-                    log.info("Request Enr : " + enr);
+                    log.info("Request Enr : {}" ,enr);
                 } catch (HttpClientErrorException e) {
                     System.err.println("Client error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
                 }
@@ -49,7 +65,7 @@ public class CompanySendService {
                 Thread.sleep(2000);
             }
         } catch (InterruptedException e) {
-            log.info("기타 에러 : " + e);
+            log.error("기타 에러 : " + e);
         }
     }
 
@@ -77,6 +93,7 @@ public class CompanySendService {
         }
         return null;
     }
+
 
 
 }

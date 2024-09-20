@@ -26,4 +26,8 @@ public class CompanyInfo {
     @Column(name = "enr")
     private String enr;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_seq", insertable = false, updatable = false)
+    private AttentionCompany attentionCompany;
+
 }

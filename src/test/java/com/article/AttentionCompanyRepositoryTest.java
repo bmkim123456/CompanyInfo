@@ -22,36 +22,20 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class AttentionCompanyRepositoryTest {
 
     @Autowired
-    private AttentionCompanyRepository attentionCompanyRepository;
-
-    @Autowired
     private CompanyInfoRepository companyInfoRepository;
 
-    @Test
-    public void testGetCompany() {
-        try (Stream<AttentionCompany> companies = attentionCompanyRepository.getCompanyInfo()) {
-            assertThat(companies).isNotNull();
-
-            List<AttentionCompany> companyList = companies.limit(10).collect(Collectors.toList());
-            assertThat(companyList).isNotNull();
-
-            for (AttentionCompany companyInfo : companyList) {
-                System.out.println(companyInfo.getCompanyInfo().getCompanyName());
-            }
-        }
-    }
 
     @Test
-    public void getEnrTest() {
-        try (Stream<String> companyEnr = companyInfoRepository.getCompanyEnr()) {
-            assertThat(companyEnr).isNotNull();
+    void getPartCompany () {
 
-            List<String> enrList = companyEnr.limit(10).collect(Collectors.toList());
-            assertThat(enrList).isNotNull();
+        List<CompanyInfo> companyInfoList = companyInfoRepository.getCompanyInfo()
+                .stream()
+                .limit(10)
+                .collect(Collectors.toList());
+        assertThat(companyInfoList).isNotNull();
 
-            for (String enr : enrList) {
-                System.out.println(enr);
-            }
+        for (CompanyInfo companyInfo : companyInfoList) {
+            System.out.println(companyInfo.getCompanyName());
         }
     }
 }

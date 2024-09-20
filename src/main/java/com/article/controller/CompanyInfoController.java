@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/company")
 @RequiredArgsConstructor
 public class CompanyInfoController {
 
@@ -23,37 +23,45 @@ public class CompanyInfoController {
     private final CompanySendService sendService;
 
     @PostMapping(value = "/file", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<String> uploadFile (@RequestPart CompanyDto dto,
-                                              @RequestPart MultipartFile file) throws IOException {
-        if (ObjectUtils.isEmpty(dto.getType())) {
-            return new ResponseEntity<>("type은 비어있을 수 없습니다", HttpStatus.BAD_REQUEST);
-        } else if (!dto.getType().equals("전체수집") && !dto.getType().equals("키워드") && !dto.getType().equals("기사개수") && !dto.getType().equals("유튜브")) {
-            return new ResponseEntity<>("type은 다음 3가지만 요청만 가능합니다 : 1.전체수집, 2.키워드, 3.기사개수", HttpStatus.BAD_REQUEST);
-        } else searchService.sendFileToCompanyInfoQueue(dto, file);
-        return ResponseEntity.ok("조회 완료");
+    public ResponseEntity<String> uploadCompanyPartFile (@RequestPart CompanyDto dto,
+                                              @RequestPart MultipartFile file) {
+       try {
+           searchService.sendFileToArticlePartTable(dto, file);
+           return ResponseEntity.ok("조회 완료");
+       } catch (Exception e) {
+           return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+       }
     }
 
-    @PostMapping("/company")
-    public ResponseEntity<String> findWholeCompany (@RequestBody CompanyDto dto) {
-        if (ObjectUtils.isEmpty(dto.getType()) || ObjectUtils.isEmpty(dto.getRange())) {
-            return new ResponseEntity<>("type과 range 항목은 비어있을 수 없습니다", HttpStatus.BAD_REQUEST);
-        } else if (!dto.getType().equals("전체수집") && !dto.getType().equals("키워드") && !dto.getType().equals("기사개수")) {
-            return new ResponseEntity<>("type은 다음 3가지만 요청만 가능합니다 : 1.전체수집, 2.키워드, 3.기사개수", HttpStatus.BAD_REQUEST);
-        } else if (!dto.getRange().equals("전체") && !dto.getRange().equals("일부")) {
-            return new ResponseEntity<>("range는 '전체', '일부' 만 입력 가능합니다.", HttpStatus.BAD_REQUEST);
-        } else searchService.sendCompanyInfo(dto.getType(), dto.getRange());
-        return ResponseEntity.ok("조회 완료");
+    @PostMapping(value = "/whole", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<String> wholeCompanyInfo () {
+        try {
+            searchService.sendCompanyInfoToArticleTable();
+            return ResponseEntity.ok("조회 완료");
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping(value = "/part")
+    public ResponseEntity<String> partCompanyInfo (@RequestBody CompanyDto dto) {
+        try {
+            searchService.partConvertCompanyInfo(dto);
+            return ResponseEntity.ok("조회 완료");
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping("/sendEnr")
-    public ResponseEntity<String> sendDataApi(@RequestHeader("Authorization") String authHeader) {
-        sendService.sendEnr(authHeader);
+    public ResponseEntity<String> sendDataApi(@RequestHeader("Authorization") String authHeader, @RequestBody String enr) {
+        sendService.sendEnr(authHeader, enr);
         return ResponseEntity.ok("전달성공");
     }
 
-    @GetMapping("/sendEnr2")
+    @GetMapping("/sendEnrList")
     public ResponseEntity<String> sendDataApi2(@RequestHeader("Authorization") String authHeader) {
-        sendService.sendEnr(authHeader);
+        sendService.sendEnrList(authHeader);
         return ResponseEntity.ok("전달성공");
     }
 

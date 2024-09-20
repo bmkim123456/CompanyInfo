@@ -1,9 +1,7 @@
 package com.article.service;
 
 import com.article.dto.CompanyDto;
-import com.article.entity.AttentionCompany;
 import com.article.entity.CompanyInfo;
-import com.article.repository.AttentionCompanyRepository;
 import com.article.repository.CompanyInfoRepository;
 import com.article.util.EncryptionUtil;
 import lombok.RequiredArgsConstructor;
@@ -31,14 +29,13 @@ import java.util.stream.Collectors;
 public class CompanySearchService {
 
     private final CompanyInfoRepository companyInfoRepository;
-    private final AttentionCompanyRepository attentionCompanyRepository;
     private final RabbitTemplate rabbitTemplate;
     private final EncryptionUtil encryptionUtil;
 
-    public void sendFileToCompanyInfoQueue (CompanyDto dto, MultipartFile file) throws IOException {
+    @Transactional
+    public void sendFileToArticlePartTable (CompanyDto dto, MultipartFile file) throws IOException {
 
         List<JSONObject> jsonObjects = convertFileToJsonObject(dto, file);
-        StringBuilder resultBuilder = new StringBuilder();
 
         int count = 0;
         for (JSONObject obj : jsonObjects) {
@@ -49,19 +46,11 @@ public class CompanySearchService {
 
                 String encrypt = encryptionUtil.encrypt(jsonResult);
 
-                if (dto.getType().equals("전체수집")) {
-                    rabbitTemplate.convertAndSend("company.article", encrypt);
-                } else if (dto.getType().equals("기사개수")) {
-                    rabbitTemplate.convertAndSend("company.article.cnt", encrypt);
-                } else if (dto.getType().equals("키워드")) {
-                    rabbitTemplate.convertAndSend("company.article.keyword", encrypt);
-                } else if (dto.getType().equals("유튜브")) {
-                    rabbitTemplate.convertAndSend("company.youtube", encrypt);
-                }
+                if (ObjectUtils.isEmpty(dto.getKeyword())) {
+                    rabbitTemplate.convertAndSend("company.article.part", encrypt);
+                } else rabbitTemplate.convertAndSend("company.article.keyword", encrypt);
 
-                resultBuilder.append(jsonResult).append("\n");
-
-                System.out.println(obj);
+                log.info(obj.toString());
                 count++;
 
                 TimeUnit.MILLISECONDS.sleep(100);
@@ -69,20 +58,12 @@ public class CompanySearchService {
                 Thread.currentThread().interrupt();
             }
         }
-        System.out.println("조회된 전체 기업 수 : " + count);
+        log.info("전달된 전체 기업 수 : " + count);
     }
 
     @Transactional
-    public void sendCompanyInfo(String type, String range) {
-
-        List<JSONObject> jsonObjects = new ArrayList<>();
-
-        if (range.equals("전체")) {
-            jsonObjects = convertCompanyInfo(type);
-        } else if (range.equals("일부")) {
-            jsonObjects = convertAttentionCompany(type);
-        }
-
+    public void sendCompanyInfoToArticleTable () {
+        List<JSONObject> jsonObjects = convertCompanyInfo();
         StringBuilder resultBuilder = new StringBuilder();
 
         int count = 0;
@@ -94,13 +75,7 @@ public class CompanySearchService {
 
                 String encrypt = encryptionUtil.encrypt(jsonResult);
 
-                if (type.equals("전체수집")) {
-                    rabbitTemplate.convertAndSend("company.article", encrypt);
-                } else if (type.equals("기사개수")) {
-                    rabbitTemplate.convertAndSend("company.article.cnt", encrypt);
-                } else if (type.equals("키워드")) {
-                    rabbitTemplate.convertAndSend("company.article.keyword", encrypt);
-                }
+                rabbitTemplate.convertAndSend("company.article", encrypt);
 
                 resultBuilder.append(jsonResult).append("\n");
 
@@ -112,7 +87,35 @@ public class CompanySearchService {
                 Thread.currentThread().interrupt();
             }
         }
-        System.out.println("조회된 전체 기업 수 : " + count);
+        log.info("조회된 전체 기업 수 : {}" ,count);
+    }
+
+    @Transactional
+    public void sendCompanyInfoToArticlePart (CompanyDto dto) {
+        List<JSONObject> jsonObjects = partConvertCompanyInfo(dto);
+
+        int count = 0;
+        for (JSONObject obj : jsonObjects) {
+            try {
+                String jsonResult = obj.toString();
+
+                String encrypt = encryptionUtil.encrypt(jsonResult);
+
+                rabbitTemplate.convertAndSend("company.article", encrypt);
+
+                /*if (ObjectUtils.isEmpty(dto.getKeyword())) {
+                    rabbitTemplate.convertAndSend("company.article.part", encrypt);
+                } else rabbitTemplate.convertAndSend("company.article.keyword", encrypt);*/
+
+                System.out.println(obj);
+                count++;
+
+                TimeUnit.MILLISECONDS.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        log.info("조회된 전체 기업 수 : {}" ,count);
     }
 
 
@@ -122,6 +125,9 @@ public class CompanySearchService {
         List<CompanyInfo> companyInfoList = new ArrayList<>();
         String line;
         while (!ObjectUtils.isEmpty((line = br.readLine()))) {
+            if (line.contains("\"")) {
+                line = line.trim().replace("\"", "");
+            }
             if (line.contains("id_seq")) {
                 continue;
             }
@@ -131,7 +137,9 @@ public class CompanySearchService {
                 companyInfoList.add(entity);
             } else System.out.println("존재하지 않는 ID : " + id);
         }
+        log.info("기업 리스트 생성 완료, 기업 수 : {}", companyInfoList.size());
         br.close();
+
         List<JSONObject> jsonObjects = new ArrayList<>();
         for (CompanyInfo companyInfo : companyInfoList) {
             JSONObject jsonObject = new JSONObject();
@@ -141,15 +149,14 @@ public class CompanySearchService {
                 jsonObject.put("ceoName", "");
             } else jsonObject.put("ceoName", companyInfo.getCeoName());
             jsonObject.put("keyword", dto.getKeyword());
-            jsonObject.put("requestDate", dto.getRequestDate());
-            jsonObject.put("type", dto.getType());
+            jsonObject.put("keyword2", dto.getKeyword2());
             jsonObjects.add(jsonObject);
         }
         return jsonObjects;
     }
 
     @Transactional
-    public List<JSONObject> convertCompanyInfo (String type) {
+    public List<JSONObject> convertCompanyInfo () {
 
         List<CompanyInfo> companyInfoList = companyInfoRepository.getCompanyInfos().collect(Collectors.toList());
 
@@ -162,26 +169,25 @@ public class CompanySearchService {
             if (ObjectUtils.isEmpty(companyInfo.getCeoName())) {
                 jsonObject.put("ceoName", "");
             } else jsonObject.put("ceoName", companyInfo.getCeoName());
-            jsonObject.put("type", type);
             jsonObjects.add(jsonObject);
         }
         return jsonObjects;
     }
 
     @Transactional
-    public List<JSONObject> convertAttentionCompany (String type) {
+    public List<JSONObject> partConvertCompanyInfo (CompanyDto dto) {
 
-        List<AttentionCompany> attentionCompanyList = attentionCompanyRepository.getCompanyInfo().collect(Collectors.toList());
+        List<CompanyInfo> companyInfoList = companyInfoRepository.getCompanyInfo();
         List<JSONObject> jsonObjects = new ArrayList<>();
-
-        for (AttentionCompany attentionCompany : attentionCompanyList) {
+        for (CompanyInfo companyInfo : companyInfoList) {
             JSONObject jsonObject = new JSONObject();
-            jsonObject.put("idSeq", attentionCompany.getCompanyInfo().getIdSeq());
-            jsonObject.put("companyName", attentionCompany.getCompanyInfo().getCompanyName());
-            if (ObjectUtils.isEmpty(attentionCompany.getCompanyInfo().getCeoName())) {
+            jsonObject.put("idSeq", companyInfo.getIdSeq());
+            jsonObject.put("companyName", companyInfo.getCompanyName());
+            if (companyInfo.getCeoName() == null) {
                 jsonObject.put("ceoName", "");
-            } else jsonObject.put("ceoName", attentionCompany.getCompanyInfo().getCeoName());
-            jsonObject.put("type", type);
+            } else jsonObject.put("ceoName", companyInfo.getCeoName());
+            jsonObject.put("keyword", dto.getKeyword());
+            jsonObject.put("keyword2", dto.getKeyword2());
             jsonObjects.add(jsonObject);
         }
         return jsonObjects;

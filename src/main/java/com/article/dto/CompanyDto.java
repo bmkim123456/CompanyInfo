@@ -13,9 +13,8 @@ public class CompanyDto {
     private String companyName;
     private String ceoName;
     private String keyword;
+    private String keyword2;
     private String queue;
     private MultipartFile file;
     private String requestDate;
-    private String type;
-    private String range;
 }

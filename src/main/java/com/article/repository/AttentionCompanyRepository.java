@@ -10,6 +10,4 @@ import java.util.stream.Stream;
 @Repository
 public interface AttentionCompanyRepository extends JpaRepository<AttentionCompany, Long> {
 
-    @Query("SELECT t1 FROM AttentionCompany t1 INNER JOIN t1.companyInfo")
-    Stream<AttentionCompany> getCompanyInfo();
 }

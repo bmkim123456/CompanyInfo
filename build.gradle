@@ -29,6 +29,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation group: 'org.json', name: 'json', version: '20210307'
 
+	//몽고db 테스
+	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+
 
 
 	// rabbitmq 사용을 위한 의존성

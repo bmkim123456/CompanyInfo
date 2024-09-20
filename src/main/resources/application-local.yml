@@ -6,7 +6,6 @@ spring:
     url: jdbc:postgresql://221.168.33.92:5433/hubble
     username: hubble
     password: "!Hubble1026!"
-
   jpa:
     hibernate:
       naming:

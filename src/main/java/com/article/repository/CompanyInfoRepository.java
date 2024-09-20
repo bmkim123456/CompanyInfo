@@ -24,5 +24,6 @@ public interface CompanyInfoRepository extends JpaRepository<CompanyInfo, Long> 
     @Query("SELECT t1.enr FROM CompanyInfo  t1")
     Stream<String> getCompanyEnr();
 
-
+    @Query("SELECT t1 FROM CompanyInfo t1 INNER JOIN t1.attentionCompany t2 ON t1.idSeq = t2.idSeq")
+    List<CompanyInfo> getCompanyInfo();
 }
