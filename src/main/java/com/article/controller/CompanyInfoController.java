@@ -46,7 +46,7 @@ public class CompanyInfoController {
     @PostMapping(value = "/part")
     public ResponseEntity<String> partCompanyInfo (@RequestBody CompanyDto dto) {
         try {
-            searchService.partConvertCompanyInfo(dto);
+            searchService.sendCompanyInfoToArticlePart(dto);
             return ResponseEntity.ok("조회 완료");
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);

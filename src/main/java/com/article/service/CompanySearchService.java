@@ -1,4 +1,4 @@
-package com.article.service;
+ package com.article.service;
 
 import com.article.dto.CompanyDto;
 import com.article.entity.CompanyInfo;
@@ -101,11 +101,9 @@ public class CompanySearchService {
 
                 String encrypt = encryptionUtil.encrypt(jsonResult);
 
-                rabbitTemplate.convertAndSend("company.article", encrypt);
-
-                /*if (ObjectUtils.isEmpty(dto.getKeyword())) {
+                if (ObjectUtils.isEmpty(dto.getKeyword())) {
                     rabbitTemplate.convertAndSend("company.article.part", encrypt);
-                } else rabbitTemplate.convertAndSend("company.article.keyword", encrypt);*/
+                } else rabbitTemplate.convertAndSend("company.article.keyword", encrypt);
 
                 System.out.println(obj);
                 count++;
