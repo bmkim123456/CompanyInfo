@@ -108,9 +108,8 @@ public class CompanySearchService {
                 System.out.println(obj);
                 count++;
 
-                TimeUnit.MILLISECONDS.sleep(100);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                throw new RuntimeException(e.getMessage());
             }
         }
         log.info("조회된 전체 기업 수 : {}" ,count);
