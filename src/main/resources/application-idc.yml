@@ -3,19 +3,18 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://221.168.33.92:5432/hubble_tmp
+    url: jdbc:postgresql://221.168.33.92:5433/hubble
     username: hubble
-    password: "!1026Antock!"
-
+    password: "!Hubble1026!"
   jpa:
     hibernate:
       naming:
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-      ddl-auto: update
+      ddl-auto: none
 
   rabbitmq:
-    host: antock.iptime.org
+    host: antock.iptime.org # 외부용
     port: 5672
     username: admin
     password: "@1026Antock@"
