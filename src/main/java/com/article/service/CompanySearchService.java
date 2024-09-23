@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
@@ -41,8 +40,6 @@ public class CompanySearchService {
         for (JSONObject obj : jsonObjects) {
             try {
                 String jsonResult = obj.toString();
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON);
 
                 String encrypt = encryptionUtil.encrypt(jsonResult);
 
@@ -64,20 +61,15 @@ public class CompanySearchService {
     @Transactional
     public void sendCompanyInfoToArticleTable () {
         List<JSONObject> jsonObjects = convertCompanyInfo();
-        StringBuilder resultBuilder = new StringBuilder();
 
         int count = 0;
         for (JSONObject obj : jsonObjects) {
             try {
                 String jsonResult = obj.toString();
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON);
 
                 String encrypt = encryptionUtil.encrypt(jsonResult);
 
                 rabbitTemplate.convertAndSend("company.article", encrypt);
-
-                resultBuilder.append(jsonResult).append("\n");
 
                 System.out.println(obj);
                 count++;
@@ -175,6 +167,7 @@ public class CompanySearchService {
     public List<JSONObject> partConvertCompanyInfo (CompanyDto dto) {
 
         List<CompanyInfo> companyInfoList = companyInfoRepository.getCompanyInfo();
+
         List<JSONObject> jsonObjects = new ArrayList<>();
         for (CompanyInfo companyInfo : companyInfoList) {
             JSONObject jsonObject = new JSONObject();

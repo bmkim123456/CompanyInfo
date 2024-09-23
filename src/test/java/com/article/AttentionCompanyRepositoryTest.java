@@ -1,9 +1,12 @@
 package com.article;
 
+import com.article.dto.CompanyDto;
 import com.article.entity.AttentionCompany;
 import com.article.entity.CompanyInfo;
 import com.article.repository.AttentionCompanyRepository;
 import com.article.repository.CompanyInfoRepository;
+import com.article.service.CompanySearchService;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -37,5 +40,27 @@ public class AttentionCompanyRepositoryTest {
         for (CompanyInfo companyInfo : companyInfoList) {
             System.out.println(companyInfo.getCompanyName());
         }
+    }
+
+    @Test
+    void getCompanyInfoTest () {
+
+        CompanyDto dto = new CompanyDto();
+        dto.setIdSeq(336484L);
+        dto.setCompanyName("앤톡");
+        dto.setCeoName("박재준");
+        dto.setKeyword("투자");
+        dto.setKeyword2("유치");
+
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("idSeq", dto.getIdSeq());
+        jsonObject.put("companyName", dto.getCompanyName());
+        if (dto.getCeoName() == null) {
+            jsonObject.put("ceoName", "");
+        } else jsonObject.put("ceoName", dto.getCeoName());
+        jsonObject.put("keyword", dto.getKeyword());
+        jsonObject.put("keyword2", dto.getKeyword2());
+
+        System.out.println(jsonObject);
     }
 }

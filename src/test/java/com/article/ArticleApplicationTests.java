@@ -1,17 +1,13 @@
 package com.article;
 
-import com.article.service.CompanySendService;
+import com.article.dto.CompanyDto;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+
 
 @SpringBootTest
-@ActiveProfiles("local")
 class ArticleApplicationTests {
-
-	@Autowired
-	CompanySendService companySendService;
 
 	@Test
 	void contextLoads() {
