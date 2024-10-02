@@ -53,6 +53,16 @@ public class CompanyInfoController {
         }
     }
 
+    @PostMapping(value = "/youtube")
+    public ResponseEntity<String> youtubeCompanyInfo (@RequestBody CompanyDto dto) {
+        try {
+            searchService.sendCompanyInfoToYoutube(dto);
+            return ResponseEntity.ok("조회 완료");
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @GetMapping("/sendEnr")
     public ResponseEntity<String> sendDataApi(@RequestHeader("Authorization") String authHeader, @RequestBody String enr) {
         sendService.sendEnr(authHeader, enr);

@@ -107,6 +107,28 @@ public class CompanySearchService {
         log.info("조회된 전체 기업 수 : {}" ,count);
     }
 
+    @Transactional
+    public void sendCompanyInfoToYoutube (CompanyDto dto) {
+        List<JSONObject> jsonObjects = partConvertCompanyInfo(dto);
+
+        int count = 0;
+        for (JSONObject obj : jsonObjects) {
+            try {
+                String jsonResult = obj.toString();
+
+                String encrypt = encryptionUtil.encrypt(jsonResult);
+                rabbitTemplate.convertAndSend("company.article.youtube", encrypt);
+
+                System.out.println(obj);
+                count++;
+
+            } catch (Exception e) {
+                throw new RuntimeException(e.getMessage());
+            }
+        }
+        log.info("조회된 전체 기업 수 : {}" ,count);
+    }
+
 
 
     private List<JSONObject> convertFileToJsonObject (CompanyDto dto, MultipartFile file) throws IOException {
